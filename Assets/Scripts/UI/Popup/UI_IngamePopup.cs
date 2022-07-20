@@ -63,6 +63,59 @@ public class UI_IngamePopup : UI_Popup
             item.PuzzleItem.SetInfo(Define.PuzzleType.Impossible);
             
             Managers.UI.MakeSubItem<UI_PuzzleItem>(Get<GameObject>((int) GameObjects.PuzzleItems).transform).name = $"{count++}";
+
+            CheckBingo();
         }
+    }
+
+    void CheckBingo()
+    {
+        int rowFlag, rowLineFlag;
+        int colFlag, colLineFlag;
+        int crossRightFlag = 0, crossRightLineFlag = 0;
+        int crossLeftFlag = 0, crossLeftLineFlag = 0;
+        int sum = 0;
+        int row, col;
+        
+        for (row = 0; row < _uiTileItems.GetLength(0); row++)
+        {
+            rowFlag = 0;
+            colFlag = 0;
+            
+            for (col = 0; col < _uiTileItems.GetLength(1); col++)
+            {
+                UI_TileItem uiTileItem = _uiTileItems[row, col];
+                if (uiTileItem != null && uiTileItem.PuzzleItem != null)
+                {
+                    rowFlag++;
+                }
+
+                uiTileItem = _uiTileItems[col, row];
+                if (uiTileItem != null && uiTileItem.PuzzleItem != null)
+                {
+                    colFlag++;
+                }
+            }
+
+            if (colFlag == 5)
+                sum++;
+
+            if (rowFlag == 5)
+                sum++;
+            
+            if (_uiTileItems[row, row].PuzzleItem != null)
+                crossRightFlag++;
+
+            if (_uiTileItems[5 - 1 - row, row].PuzzleItem != null)
+                crossLeftFlag++;
+
+            if (crossRightFlag == 5)
+                sum++;
+
+            if (crossLeftFlag == 5)
+                sum++;
+        }
+        
+        Debug.Log($"Bingo Count = {sum}");
     }
 }
