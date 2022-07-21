@@ -27,9 +27,18 @@ public class Define
         Game
     }
 
-    public enum PuzzleType
+    public enum PuzzleState
     {
         Possible,
         Impossible
+    }
+
+    public enum PuzzleType
+    {
+        None = 0,
+        Fire = 1,
+        Water = 2,
+        Earth = 3,
+        Wind = 4,
     }
 }

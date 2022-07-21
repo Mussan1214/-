@@ -38,6 +38,22 @@ public class UI_TileItem : UI_Base
         Col = col;
         _onDrop = onDrop;
     }
+
+    public void SetPuzzleItem(UI_PuzzleItem uiPuzzleItem)
+    {
+        if (uiPuzzleItem != null)
+        {
+            PuzzleItem = uiPuzzleItem;
+        }
+        else
+        {
+            if (PuzzleItem != null)
+            {
+                Managers.Resource.Destroy(PuzzleItem.gameObject);
+                PuzzleItem = null;
+            }
+        }
+    }
     
     void OnDrop(PointerEventData eventData)
     {
@@ -48,7 +64,7 @@ public class UI_TileItem : UI_Base
 
             UI_PuzzleItem uiPuzzleItem = eventData.pointerDrag.GetComponent<UI_PuzzleItem>();
             if (uiPuzzleItem != null)
-                PuzzleItem = uiPuzzleItem;
+                SetPuzzleItem(uiPuzzleItem);
             
             _onDrop?.Invoke(this);
         }

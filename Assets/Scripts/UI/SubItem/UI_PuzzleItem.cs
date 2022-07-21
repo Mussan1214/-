@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class UI_PuzzleItem : UI_Base
 {
@@ -12,6 +13,7 @@ public class UI_PuzzleItem : UI_Base
         PuzzleImage,
     }
     
+    public Define.PuzzleState PuzzleState { get; private set; }
     public Define.PuzzleType PuzzleType { get; private set; }
 
     private CanvasGroup _canvasGroup;
@@ -37,23 +39,32 @@ public class UI_PuzzleItem : UI_Base
         gameObject.BindEvent(OnDrag, Define.UIEvent.Drag);
         gameObject.BindEvent(OnEndDrag, Define.UIEvent.EndDrag);
         
+        SetPuzzleType((Define.PuzzleType) Random.Range(1, 5));
+        
         return true;
     }
 
-    public void SetInfo(Define.PuzzleType type)
+    public void SetState(Define.PuzzleState state)
     {
-        PuzzleType = type;
-        if (PuzzleType == Define.PuzzleType.Impossible)
+        PuzzleState = state;
+        if (PuzzleState == Define.PuzzleState.Impossible)
         {
             _canvasGroup.blocksRaycasts = false;
             _canvasGroup.alpha = 1.0f;
         }
     }
+
+    public void SetPuzzleType(Define.PuzzleType puzzleType)
+    {
+        PuzzleType = puzzleType;
+        Get<Image>((int)Images.PuzzleImage).sprite = 
+        Managers.Resource.Load<Sprite>($"Sprites/Stone/{((int) puzzleType).ToString()}");
+    }
     
     #region Handler Event
     void OnBeginDrag(PointerEventData eventData)
     {
-        if (PuzzleType == Define.PuzzleType.Impossible)
+        if (PuzzleState == Define.PuzzleState.Impossible)
             return;
         
         _previousParent = transform.parent;
@@ -65,7 +76,7 @@ public class UI_PuzzleItem : UI_Base
 
     void OnDrag(PointerEventData eventData)
     {
-        if (PuzzleType == Define.PuzzleType.Impossible)
+        if (PuzzleState == Define.PuzzleState.Impossible)
             return;
         
         _rectTransform.position = eventData.position;
@@ -73,7 +84,7 @@ public class UI_PuzzleItem : UI_Base
 
     void OnEndDrag(PointerEventData eventData)
     {
-        if (PuzzleType == Define.PuzzleType.Impossible)
+        if (PuzzleState == Define.PuzzleState.Impossible)
             return;
         
         if (transform.parent == _previousParent)
