@@ -54,6 +54,11 @@ public class UI_TileItem : UI_Base
             }
         }
     }
+
+    public void Active(bool active)
+    {
+        Get<Image>((int) Images.TileImage).enabled = active;
+    }
     
     void OnDrop(PointerEventData eventData)
     {

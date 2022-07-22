@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -14,20 +15,27 @@ public class UI_IngamePopup : UI_Popup
         BingoItems,
         PuzzleItems,
     }
+
+    enum Texts
+    {
+        TurnCountText,
+    }
     
     private UI_TileItem[,] _uiTileItems;
     private List<UI_TileItem> _bingoItems = new List<UI_TileItem>();
-
-    private int count = 0;
+    private List<UI_TileItem> _actionItems = new List<UI_TileItem>();
+    private int _turn = 1;
+    private int _turnActionCount = 2;
 
     private Vector2Int _mapSize = new Vector2Int(5, 5);
-    
+
     public override bool Init()
     {
         if (base.Init() == false)
             return false;
         
         Bind<GameObject>(typeof(GameObjects));
+        BindText(typeof(Texts));
 
         MakeMap();
 
@@ -40,11 +48,74 @@ public class UI_IngamePopup : UI_Popup
         if (item != null && item.PuzzleItem != null)
         {
             item.PuzzleItem.SetState(Define.PuzzleState.Impossible);
-            
-            Managers.UI.MakeSubItem<UI_PuzzleItem>(Get<GameObject>((int) GameObjects.PuzzleItems).transform).name = $"{count++}";
+
+            // Managers.UI.MakeSubItem<UI_PuzzleItem>(Get<GameObject>((int) GameObjects.PuzzleItems).transform);
 
             // CheckBingo();
-            CheckBingoCount(item);
+            // CheckBingoCount(item);
+
+            CheckActionCount(item);
+        }
+    }
+
+    private void CheckActionCount(UI_TileItem item)
+    {
+        _actionItems.Add(item);
+        
+        _turnActionCount--;
+        if (_turnActionCount == 1)
+        {
+            GameObject parent = Get<GameObject>((int) GameObjects.PuzzleItems);
+            HorizontalLayoutGroup horizontal = parent.GetComponent<HorizontalLayoutGroup>();
+            horizontal.enabled = false;
+            
+            int colDistance = 2 - item.Col;
+            int rowDistance = 2 - item.Row;
+
+            for (int row = 0; row < _uiTileItems.GetLength(0); row++)
+            {
+                for (int col = 0; col < _uiTileItems.GetLength(1); col++)
+                {
+                    UI_TileItem tileItem = _uiTileItems[row, col];
+                    if (tileItem.PuzzleItem == null)
+                    {
+                        tileItem.Active(false);
+                    }
+                }
+            }
+
+            _uiTileItems[2 + rowDistance, 2 + colDistance].Active(true);
+        }
+        else if (_turnActionCount == 0)
+        {
+            CheckBingoCount(_actionItems[0]);
+            CheckBingoCount(_actionItems[1]);
+            _actionItems.Clear();
+
+            for (int row = 0; row < _uiTileItems.GetLength(0); row++)
+            {
+                for (int col = 0; col < _uiTileItems.GetLength(1); col++)
+                {
+                    UI_TileItem tileItem = _uiTileItems[row, col];
+                    if (tileItem.PuzzleItem == null)
+                    {
+                        tileItem.Active(true);
+                    }
+                }
+            }
+
+            _turnActionCount = 2;
+            RefreshTurnCount();
+
+
+            GameObject parent = Get<GameObject>((int) GameObjects.PuzzleItems);
+            Managers.UI.MakeSubItem<UI_PuzzleItem>(parent.transform);
+            Managers.UI.MakeSubItem<UI_PuzzleItem>(parent.transform);
+            
+            HorizontalLayoutGroup horizontal = parent.GetComponent<HorizontalLayoutGroup>();
+            horizontal.enabled = true;
+            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform) horizontal.transform);
+            horizontal.enabled = false;
         }
     }
 
@@ -63,7 +134,7 @@ public class UI_IngamePopup : UI_Popup
 
         for (int row = tileItem.Row; row > 0; row--)
         {
-            UI_TileItem tile = _uiTileItems[tileItem.Col, row - 1];
+            UI_TileItem tile = _uiTileItems[row - 1, tileItem.Col];
             if (tile.PuzzleItem != null && tile.PuzzleItem.PuzzleType == tileItem.PuzzleItem.PuzzleType)
             {
                 rowFlag++;
@@ -75,7 +146,7 @@ public class UI_IngamePopup : UI_Popup
 
         for (int row = tileItem.Row; row < _mapSize.y - 1; row++)
         {
-            UI_TileItem tile = _uiTileItems[tileItem.Col, row + 1];
+            UI_TileItem tile = _uiTileItems[row + 1, tileItem.Col];
             if (tile.PuzzleItem != null && tile.PuzzleItem.PuzzleType == tileItem.PuzzleItem.PuzzleType)
             {
                 rowFlag++;
@@ -94,7 +165,7 @@ public class UI_IngamePopup : UI_Popup
         
         for (int col = tileItem.Col; col > 0; col--)
         {
-            UI_TileItem tile = _uiTileItems[col - 1, tileItem.Row];
+            UI_TileItem tile = _uiTileItems[tileItem.Row, col - 1];
             if (tile.PuzzleItem != null && tile.PuzzleItem.PuzzleType == tileItem.PuzzleItem.PuzzleType)
             {
                 colFlag++;
@@ -106,7 +177,7 @@ public class UI_IngamePopup : UI_Popup
 
         for (int col = tileItem.Col; col < _mapSize.x - 1; col++)
         {
-            UI_TileItem tile = _uiTileItems[col + 1, tileItem.Row];
+            UI_TileItem tile = _uiTileItems[tileItem.Row, col + 1];
             if (tile.PuzzleItem != null && tile.PuzzleItem.PuzzleType == tileItem.PuzzleItem.PuzzleType)
             {
                 colFlag++;
@@ -125,7 +196,7 @@ public class UI_IngamePopup : UI_Popup
 
         for (int row = tileItem.Row, col = tileItem.Col; row > 0 && col > 0; row--, col--)
         {
-            UI_TileItem tile = _uiTileItems[col - 1, row - 1];
+            UI_TileItem tile = _uiTileItems[row - 1, col - 1];
             if (tile.PuzzleItem != null && tile.PuzzleItem.PuzzleType == tileItem.PuzzleItem.PuzzleType)
             {
                 crossRightFlag++;
@@ -137,7 +208,7 @@ public class UI_IngamePopup : UI_Popup
         
         for (int row = tileItem.Row, col = tileItem.Col; row < _mapSize.y - 1 && col < _mapSize.x - 1; row++, col++)
         {
-            UI_TileItem tile = _uiTileItems[col + 1, row + 1];
+            UI_TileItem tile = _uiTileItems[row + 1, col + 1];
             if (tile.PuzzleItem != null && tile.PuzzleItem.PuzzleType == tileItem.PuzzleItem.PuzzleType)
             {
                 crossRightFlag++;
@@ -156,7 +227,7 @@ public class UI_IngamePopup : UI_Popup
 
         for (int row = tileItem.Row, col = tileItem.Col; row < _mapSize.y - 1 & col > 0; row++, col--)
         {
-            UI_TileItem tile = _uiTileItems[col - 1, row + 1];
+            UI_TileItem tile = _uiTileItems[row + 1, col - 1];
             if (tile.PuzzleItem != null && tile.PuzzleItem.PuzzleType == tileItem.PuzzleItem.PuzzleType)
             {
                 crossLeftFlag++;
@@ -168,7 +239,7 @@ public class UI_IngamePopup : UI_Popup
 
         for (int row = tileItem.Row, col = tileItem.Col; row > 0 && col < _mapSize.x - 1; row--, col++)
         {
-            UI_TileItem tile = _uiTileItems[col + 1, row - 1];
+            UI_TileItem tile = _uiTileItems[row - 1, col + 1];
             if (tile.PuzzleItem != null && tile.PuzzleItem.PuzzleType == tileItem.PuzzleItem.PuzzleType)
             {
                 crossLeftFlag++;
@@ -286,8 +357,8 @@ public class UI_IngamePopup : UI_Popup
             for (int col = 0; col < _mapSize.x; col++)
             {
                 UI_TileItem uiTileItem = Managers.UI.MakeSubItem<UI_TileItem>(parent.transform);
-                _uiTileItems[col, row] = uiTileItem;
-                _uiTileItems[col, row].SetInfo(row, col, OnDropItem);
+                _uiTileItems[row, col] = uiTileItem;
+                _uiTileItems[row, col].SetInfo(row, col, OnDropItem);
 
                 if (row == 0 || row == 4 || col == 0 || col == 4 || (row == 2 && col == 2))
                 {
@@ -307,8 +378,7 @@ public class UI_IngamePopup : UI_Popup
 
         for (int i = 0; i < 4; i++)
         {
-            UI_PuzzleItem puzzleItem = Managers.UI.MakeSubItem<UI_PuzzleItem>(parent.transform);
-            puzzleItem.name = $"{count++}";;
+            Managers.UI.MakeSubItem<UI_PuzzleItem>(parent.transform);
         }
     }
 
@@ -326,8 +396,18 @@ public class UI_IngamePopup : UI_Popup
                 else
                 {
                     uiTileItem.SetPuzzleItem(null);
+                    uiTileItem.Active(true);
                 }
             }
         }
+    }
+
+    void RefreshTurnCount()
+    {
+        _turn++;
+        TextMeshProUGUI text = GetText((int) Texts.TurnCountText);
+        text.text = $"{_turn} Turn";
+
+        text.gameObject.transform.DOPunchScale(Vector3.one, 0.5f, 1);
     }
 }
