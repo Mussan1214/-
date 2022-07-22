@@ -9,6 +9,11 @@ public class UI_CharacterInfoPopup : UI_Popup
         CharacterInfoText,
     }
 
+    enum Images
+    {
+        CharacterInfoImage,
+    }
+
     private Data.CharacterData _characterData;
     
     public override bool Init()
@@ -17,12 +22,26 @@ public class UI_CharacterInfoPopup : UI_Popup
             return false;
 
         BindText(typeof(Texts));
+        BindImage(typeof(Images));
         
-        gameObject.BindEvent((eventData) =>
+        GetImage((int) Images.CharacterInfoImage).gameObject.BindEvent((eventData) =>
         {
             ClosePopupUI();
         }, Define.UIEvent.Click);
+
         
+        RefreshUI();
+        
+        return true;
+    }
+
+    public void SetCharacterData(Data.CharacterData characterData)
+    {
+        _characterData = characterData;
+    }
+
+    public void RefreshUI()
+    {
         if (_characterData == null)
         {
             Debug.Log("CharacterData is null");
@@ -31,16 +50,7 @@ public class UI_CharacterInfoPopup : UI_Popup
         Data.SkillData skillData = null;
         Managers.Data.SkillDict.TryGetValue(_characterData.SkillID, out skillData);
         
-        Debug.Log($"!캐릭터 정보 팝업!\n캐릭터 이름 : {_characterData.Name}\n스킬설명: {(skillData != null ? skillData.Description : string.Empty)}");
         GetText((int) Texts.CharacterInfoText).text =
             $"캐릭터 이름 : {_characterData.Name}\n스킬설명: {(skillData != null ? skillData.Description : string.Empty)}";
-        
-        
-        return true;
-    }
-
-    public void SetCharacterData(Data.CharacterData characterData)
-    {
-        _characterData = characterData;
     }
 }

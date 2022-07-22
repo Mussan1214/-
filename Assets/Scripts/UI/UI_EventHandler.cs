@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 public class UI_EventHandler : MonoBehaviour,
     IPointerClickHandler, IPointerDownHandler, IPointerUpHandler,
     IBeginDragHandler, IDragHandler, IEndDragHandler,
-    IPointerEnterHandler, IDropHandler, IPointerExitHandler
+    IPointerEnterHandler, IPointerExitHandler
 {
     public Action<PointerEventData> OnClickHandler = null;
     public Action<PointerEventData> OnPressedHandler = null;
@@ -77,12 +77,6 @@ public class UI_EventHandler : MonoBehaviour,
     public void OnPointerEnter(PointerEventData eventData)
     {
         OnPointerEnterHandler?.Invoke(eventData);
-    }
-
-    public void OnDrop(PointerEventData eventData)
-    {
-        Debug.Log("OnDrop");
-        OnDropHandler?.Invoke(eventData);
     }
 
     public void OnPointerExit(PointerEventData eventData)

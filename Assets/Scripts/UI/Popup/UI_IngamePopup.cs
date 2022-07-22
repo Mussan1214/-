@@ -21,6 +21,11 @@ public class UI_IngamePopup : UI_Popup
     {
         TurnCountText,
     }
+
+    enum Images
+    {
+        BossImage
+    }
     
     private Vector2Int _mapSize = new Vector2Int(5, 5);
     private UI_TileItem[,] _uiTileItems;
@@ -39,6 +44,7 @@ public class UI_IngamePopup : UI_Popup
         
         Bind<GameObject>(typeof(GameObjects));
         BindText(typeof(Texts));
+        BindImage(typeof(Images));
 
         MakeMap();
         MakeCharacter();
@@ -260,21 +266,80 @@ public class UI_IngamePopup : UI_Popup
         }
 
         float refreshDelayTime = 0;
+        int tempIdx = 0;
         foreach (UI_TileItem bingoItem in _bingoItems)
         {
-            GameObject go = Managers.Resource.Instantiate($"Particle/UI/UIParticle_001");
-            ParticleSystem particleSystem = Utils.FindChild<ParticleSystem>(go, recursive: true);
-            particleSystem.startColor =
+            Color particleColor =
                 bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Fire ? Color.red :
                 bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Water ? Color.blue :
                 bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Earth ? Color.yellow :
                 bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Wind ? Color.green :
                 Color.white;
+            
+            GameObject go = Managers.Resource.Instantiate($"Particle/UI/UIParticle_001");
+            ParticleSystem particleSystem = Utils.FindChild<ParticleSystem>(go, recursive: true);
+            particleSystem.startColor = particleColor;
 
-            go.transform.SetParent(bingoItem.transform);
-            go.transform.localPosition = Vector3.zero;
+            go.transform.SetParent(gameObject.transform);
+            go.transform.position = bingoItem.transform.position;
 
             refreshDelayTime = particleSystem.startLifetime;
+            particleSystem.loop = true;
+
+            GameObject targetObject = _characterItems[
+                bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Fire ? 0 :
+                bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Water ? 1 :
+                bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Earth ? 3 :
+                bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Wind ? 2 :
+                4
+            ].gameObject;
+            
+            Vector3[] paths = new Vector3[3];
+            paths.SetValue(go.transform.position, 0);
+            paths.SetValue(targetObject.transform.position, 2);
+            paths.SetValue(new Vector3( paths[0].x + (paths[2].x - paths[0].x), paths[0].y + (paths[2].y - paths[0].y) * 0.5f, 0), 1);
+
+            go.transform.DOPath(paths, 1.0f, PathType.CatmullRom).SetEase(Ease.OutCubic).SetDelay(1.0f).OnComplete(() =>
+            {
+                go.transform.DOScale(Vector3.one * 0.7f, 0.3f).OnComplete(() =>
+                {
+                    GameObject particleObject = Managers.Resource.Instantiate("Particle/UI/UIParticle_002");
+                    particleObject.transform.SetParent(transform);
+                    particleObject.transform.position = GetImage((int) Images.BossImage).transform.position;
+                    
+                    Vector3 originPosition = particleObject.transform.position;
+                    originPosition.y -= 320.0f;
+
+                    int degree = Random.Range(0, 360);
+                    float radian = degree * Mathf.PI / 180;
+                    float distance = Random.Range(10f, 150f);
+                    originPosition.x += distance * Mathf.Cos(radian);
+                    originPosition.y += distance * Mathf.Sin(radian);
+                    
+                    particleObject.transform.position = originPosition;
+                    
+                    ParticleSystem[] particleSystems = particleObject.GetComponentsInChildren<ParticleSystem>();
+                    foreach (ParticleSystem system in particleSystems)
+                    {
+                        system.loop = true;
+                        system.startColor = particleColor;
+
+                        system.transform.DOScale(Vector3.one * 0.5f, 1.0f)
+                            .OnComplete(() => Managers.Resource.Destroy(system.gameObject));
+                    }
+
+                    GetImage((int) Images.BossImage).transform.DOPunchRotation(Vector3.one, 1.5f).SetDelay(0.5f);
+                    Managers.Resource.Destroy(go);
+                });
+            });
+
+            // go.transform.DOMove(_characterItems[0].transform.position, 1.0f).SetDelay(particleSystem.startLifetime).OnComplete(() =>
+            // {
+            //     go.transform.DOScale(Vector3.one * 0.7f, 0.15f).OnComplete(() =>
+            //     {
+            //         Managers.Resource.Destroy(go);
+            //     });
+            // });
         }
 
         int puzzleCount = 0;

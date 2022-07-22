@@ -74,7 +74,14 @@ public class UI_CharacterItem : UI_Base
             Debug.Log("CharacterData is null");
             return;
         }
-        
-        Managers.UI.ShowPopupUI<UI_CharacterInfoPopup>().SetCharacterData(CharacterData);
+
+        UI_CharacterInfoPopup uiCharacterInfoPopup = Managers.UI.FindPopup<UI_CharacterInfoPopup>();
+        if (uiCharacterInfoPopup == null)
+            Managers.UI.ShowPopupUI<UI_CharacterInfoPopup>().SetCharacterData(CharacterData);
+        else
+        {
+            uiCharacterInfoPopup.SetCharacterData(CharacterData);
+            uiCharacterInfoPopup.RefreshUI();
+        }
     }
 }
