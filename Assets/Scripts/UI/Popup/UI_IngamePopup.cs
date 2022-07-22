@@ -14,6 +14,7 @@ public class UI_IngamePopup : UI_Popup
     {
         BingoItems,
         PuzzleItems,
+        CharacterPanel,
     }
 
     enum Texts
@@ -21,13 +22,15 @@ public class UI_IngamePopup : UI_Popup
         TurnCountText,
     }
     
+    private Vector2Int _mapSize = new Vector2Int(5, 5);
     private UI_TileItem[,] _uiTileItems;
     private List<UI_TileItem> _bingoItems = new List<UI_TileItem>();
     private List<UI_TileItem> _actionItems = new List<UI_TileItem>();
+    
     private int _turn = 1;
     private int _turnActionCount = 2;
 
-    private Vector2Int _mapSize = new Vector2Int(5, 5);
+    private List<UI_CharacterItem> _characterItems = new List<UI_CharacterItem>();
 
     public override bool Init()
     {
@@ -38,6 +41,7 @@ public class UI_IngamePopup : UI_Popup
         BindText(typeof(Texts));
 
         MakeMap();
+        MakeCharacter();
 
         return true;
     }
@@ -409,5 +413,22 @@ public class UI_IngamePopup : UI_Popup
         text.text = $"{_turn} Turn";
 
         text.gameObject.transform.DOPunchScale(Vector3.one, 0.5f, 1);
+    }
+
+    void MakeCharacter()
+    {
+        GameObject parent = GetObject((int) GameObjects.CharacterPanel);
+        foreach (Transform t in parent.transform)
+            Managers.Resource.Destroy(t.gameObject);
+
+        for (int i = 0; i < 5; i++)
+        {
+            if (_characterItems.Count <= i)
+                _characterItems.Add(Managers.UI.MakeSubItem<UI_CharacterItem>(parent.transform));
+
+            Data.CharacterData characterData = null;
+            Managers.Data.CharacterDict.TryGetValue(i + 1, out characterData);
+            _characterItems[i].SetCharacterData(characterData);
+        }
     }
 }

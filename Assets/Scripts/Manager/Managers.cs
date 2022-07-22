@@ -14,6 +14,9 @@ public class Managers : MonoBehaviour
     private static UIManager s_uiManager = new UIManager();
     public static UIManager UI { get { Init(); return s_uiManager; } }
 
+    private static DataManager s_dataManager = new DataManager();
+    public static DataManager Data { get { Init(); return s_dataManager; }}
+
     private void Start()
     {
         Init();
@@ -31,6 +34,7 @@ public class Managers : MonoBehaviour
             DontDestroyOnLoad(go);
             
             // TODO Init
+            s_dataManager.Init();
 
             // Application.targetFrameRate = 60;
         }

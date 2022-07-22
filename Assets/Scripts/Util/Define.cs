@@ -7,7 +7,7 @@ public class Define
     public enum UIEvent
     {
         Click,
-        // Pressed,
+        Pressed,
         PointerDown,
         PointerUp,
         
@@ -34,6 +34,15 @@ public class Define
     }
 
     public enum PuzzleType
+    {
+        None = 0,
+        Fire = 1,
+        Water = 2,
+        Earth = 3,
+        Wind = 4,
+    }
+
+    public enum ElementType
     {
         None = 0,
         Fire = 1,

@@ -82,10 +82,10 @@ public class UI_Base : MonoBehaviour
                     uiEventHandler.OnClickHandler -= action;
                     uiEventHandler.OnClickHandler += action;
                     break;
-                // case Define.UIEvent.Pressed:
-                //     uiEventHandler.OnPressedHandler -= action;
-                //     uiEventHandler.OnPressedHandler += action;
-                //     break;
+                case Define.UIEvent.Pressed:
+                    uiEventHandler.OnPressedHandler -= action;
+                    uiEventHandler.OnPressedHandler += action;
+                    break;
                 case Define.UIEvent.PointerDown:
                     uiEventHandler.OnPointerDownHandler -= action;
                     uiEventHandler.OnPointerDownHandler += action;

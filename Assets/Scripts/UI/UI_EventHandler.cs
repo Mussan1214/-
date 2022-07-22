@@ -10,7 +10,7 @@ public class UI_EventHandler : MonoBehaviour,
     IPointerEnterHandler, IDropHandler, IPointerExitHandler
 {
     public Action<PointerEventData> OnClickHandler = null;
-    // public Action<PointerEventData> OnPressedHandler = null;
+    public Action<PointerEventData> OnPressedHandler = null;
     public Action<PointerEventData> OnPointerDownHandler = null;
     public Action<PointerEventData> OnPointerUpHandler = null;
 
@@ -24,12 +24,21 @@ public class UI_EventHandler : MonoBehaviour,
     
 
     private bool _pressed = false;
+    private const float _pressedTime = 0.25f;
+    private float _pressedTimeValue = 0.0f;
 
-    // private void Update()
-    // {
-    //     if (_pressed)
-    //         OnPressedHandler?.Invoke();
-    // }
+    private void Update()
+    {
+        if (_pressed)
+        {
+            _pressedTimeValue += Time.deltaTime;
+            if (_pressedTimeValue > _pressedTime)
+            {
+                _pressed = false;
+                OnPressedHandler?.Invoke(null);
+            }
+        }
+    }
 
     public void OnPointerClick(PointerEventData eventData)
     {
@@ -39,6 +48,8 @@ public class UI_EventHandler : MonoBehaviour,
     public void OnPointerDown(PointerEventData eventData)
     {
         _pressed = true;
+        _pressedTimeValue = 0.0f;
+        
         OnPointerDownHandler?.Invoke(eventData);
     }
 
