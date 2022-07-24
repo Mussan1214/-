@@ -70,6 +70,7 @@ public class UI_IngamePopup : UI_Popup
 
     private void CheckActionCount(UI_TileItem item)
     {
+        item.Active(false);
         _actionItems.Add(item);
         
         _turnActionCount--;
@@ -81,7 +82,7 @@ public class UI_IngamePopup : UI_Popup
             
             int colDistance = 2 - item.Col;
             int rowDistance = 2 - item.Row;
-
+            
             for (int row = 0; row < _uiTileItems.GetLength(0); row++)
             {
                 for (int col = 0; col < _uiTileItems.GetLength(1); col++)
@@ -325,10 +326,12 @@ public class UI_IngamePopup : UI_Popup
                         system.startColor = particleColor;
 
                         system.transform.DOScale(Vector3.one * 0.5f, 1.0f)
-                            .OnComplete(() => Managers.Resource.Destroy(system.gameObject));
+                            .OnComplete(() => Managers.Resource.Destroy(particleObject));
                     }
 
-                    GetImage((int) Images.BossImage).transform.DOPunchRotation(Vector3.one, 1.5f).SetDelay(0.5f);
+                    
+                    GetImage((int) Images.BossImage).transform.DOPunchRotation(Vector3.one, 1.5f).SetDelay(0.5f).OnComplete(() =>
+                        GetImage((int) Images.BossImage).transform.DORotate(Vector3.zero, 0.25f));
                     Managers.Resource.Destroy(go);
                 });
             });
