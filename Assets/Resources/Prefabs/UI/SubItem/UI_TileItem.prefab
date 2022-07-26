@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1446574338946772263}
   - component: {fileID: 4566014990979910938}
+  - component: {fileID: 7537206690288937842}
   m_Layer: 5
   m_Name: UI_TileItem
   m_TagString: Untagged
@@ -50,6 +51,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33c06098ba7ce4c9abb2044406d4e0ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!225 &7537206690288937842
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1446574338946772262}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &5507576290986968365
 GameObject:
   m_ObjectHideFlags: 0

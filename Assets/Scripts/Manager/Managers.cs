@@ -7,6 +7,10 @@ public class Managers : MonoBehaviour
     public static Managers s_instance = null;
     public static Managers Instance => s_instance;
 
+    private static MainManager s_main = new MainManager();
+    public static MainManager Main { get { Init(); return s_main;}}
+    
+
     private static ResourceManager s_resourceManager = new ResourceManager();
     public static ResourceManager Resource { get { Init(); return s_resourceManager; } }
 
@@ -35,6 +39,7 @@ public class Managers : MonoBehaviour
             
             // TODO Init
             s_dataManager.Init();
+            s_main.Init();
 
             // Application.targetFrameRate = 60;
         }

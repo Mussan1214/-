@@ -12,6 +12,11 @@ public class UI_TileItem : UI_Base
         TileImage,
     }
 
+    enum CanvasGroups
+    {
+        UI_TileItem,
+    }
+
     public int Row { get; private set; } = -1;
     public int Col { get; private set; } = -1;
 
@@ -24,6 +29,7 @@ public class UI_TileItem : UI_Base
         if (base.Init() == false)
             return false;
 
+        Bind<CanvasGroup>(typeof(CanvasGroups));
         Bind<Image>(typeof(Images));
         Bind<RectTransform>(typeof(Images));
         
@@ -41,9 +47,12 @@ public class UI_TileItem : UI_Base
 
     public void SetPuzzleItem(UI_PuzzleItem uiPuzzleItem)
     {
+        CanvasGroup canvasGroup = Get<CanvasGroup>((int) CanvasGroups.UI_TileItem);
+        
         if (uiPuzzleItem != null)
         {
             PuzzleItem = uiPuzzleItem;
+            canvasGroup.alpha = 1.0f;
         }
         else
         {
@@ -53,11 +62,28 @@ public class UI_TileItem : UI_Base
                 PuzzleItem = null;
             }
         }
+
+        canvasGroup.blocksRaycasts = PuzzleItem == null;
     }
 
     public void Active(bool active)
     {
-        Get<Image>((int) Images.TileImage).enabled = active;
+        CanvasGroup canvasGroup = Get<CanvasGroup>((int) CanvasGroups.UI_TileItem);
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = active ? 1.0f : 0.3f;
+            if (active)
+            {
+                if (PuzzleItem == null)
+                    canvasGroup.blocksRaycasts = true;
+                else
+                    canvasGroup.blocksRaycasts = false;
+            }
+            else
+            {
+                canvasGroup.blocksRaycasts = active;
+            }
+        }
     }
     
     void OnDrop(PointerEventData eventData)

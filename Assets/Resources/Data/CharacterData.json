@@ -4,7 +4,8 @@
       "ID": "1",
       "Name": "화",
       "ElementType": "1",
-      "MaxHp": "200",
+      "MaxHp": "150",
+      "Atk": "30",
       "SkillID": "1",
       "ThumbnailPath": "Sprites/Thumbnail/1",
       "FullImagePath": "Sprites/Character/1"
@@ -13,7 +14,8 @@
       "ID": "2",
       "Name": "수",
       "ElementType": "2",
-      "MaxHp": "200",
+      "MaxHp": "150",
+      "Atk": "30",
       "SkillID": "2",
       "ThumbnailPath": "Sprites/Thumbnail/2",
       "FullImagePath": "Sprites/Character/2"
@@ -22,7 +24,8 @@
       "ID": "3",
       "Name": "풍",
       "ElementType": "4",
-      "MaxHp": "200",
+      "MaxHp": "150",
+      "Atk": "30",
       "SkillID": "3",
       "ThumbnailPath": "Sprites/Thumbnail/3",
       "FullImagePath": "Sprites/Character/3"
@@ -31,7 +34,8 @@
       "ID": "4",
       "Name": "지",
       "ElementType": "3",
-      "MaxHp": "200",
+      "MaxHp": "150",
+      "Atk": "30",
       "SkillID": "4",
       "ThumbnailPath": "Sprites/Thumbnail/4",
       "FullImagePath": "Sprites/Character/4"
@@ -40,10 +44,21 @@
       "ID": "5",
       "Name": "지",
       "ElementType": "3",
-      "MaxHp": "200",
+      "MaxHp": "150",
+      "Atk": "30",
       "SkillID": "5",
       "ThumbnailPath": "Sprites/Thumbnail/5",
       "FullImagePath": "Sprites/Character/5"
+    },
+    {
+      "ID": "100",
+      "Name": "서큐버스",
+      "ElementType": "1",
+      "MaxHp": "3000",
+      "Atk": "95",
+      "SkillID": "100",
+      "ThumbnailPath": "Sprites/Ingame/in-game_monster2",
+      "FullImagePath": "Sprites/Ingame/in-game_monster2"
     }
   ]
 }

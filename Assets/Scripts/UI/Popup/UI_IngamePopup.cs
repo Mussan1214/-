@@ -70,7 +70,6 @@ public class UI_IngamePopup : UI_Popup
 
     private void CheckActionCount(UI_TileItem item)
     {
-        item.Active(false);
         _actionItems.Add(item);
         
         _turnActionCount--;
@@ -267,7 +266,6 @@ public class UI_IngamePopup : UI_Popup
         }
 
         float refreshDelayTime = 0;
-        int tempIdx = 0;
         foreach (UI_TileItem bingoItem in _bingoItems)
         {
             Color particleColor =
@@ -278,14 +276,21 @@ public class UI_IngamePopup : UI_Popup
                 Color.white;
             
             GameObject go = Managers.Resource.Instantiate($"Particle/UI/UIParticle_001");
-            ParticleSystem particleSystem = Utils.FindChild<ParticleSystem>(go, recursive: true);
-            particleSystem.startColor = particleColor;
-
-            go.transform.SetParent(gameObject.transform);
+            go.transform.SetParent(transform);
             go.transform.position = bingoItem.transform.position;
+            
+            ParticleSystem[] particleSystems = go.GetComponentsInChildren<ParticleSystem>();
+            foreach (ParticleSystem particleSystem in particleSystems)
+            {
+                particleSystem.loop = true;
+                particleSystem.startColor = particleColor;
 
-            refreshDelayTime = particleSystem.startLifetime;
-            particleSystem.loop = true;
+                if (refreshDelayTime < particleSystem.duration)
+                    refreshDelayTime = particleSystem.duration;
+            }
+            
+            Debug.Log($"refreshDalyTime => {refreshDelayTime}");
+
 
             GameObject targetObject = _characterItems[
                 bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Fire ? 0 :
@@ -299,8 +304,8 @@ public class UI_IngamePopup : UI_Popup
             paths.SetValue(go.transform.position, 0);
             paths.SetValue(targetObject.transform.position, 2);
             paths.SetValue(new Vector3( paths[0].x + (paths[2].x - paths[0].x), paths[0].y + (paths[2].y - paths[0].y) * 0.5f, 0), 1);
-
-            go.transform.DOPath(paths, 1.0f, PathType.CatmullRom).SetEase(Ease.OutCubic).SetDelay(1.0f).OnComplete(() =>
+            
+            go.transform.DOPath(paths, 1.0f, PathType.CatmullRom).SetEase(Ease.OutCubic).SetDelay(refreshDelayTime * 0.5f).OnComplete(() =>
             {
                 go.transform.DOScale(Vector3.one * 0.7f, 0.3f).OnComplete(() =>
                 {
@@ -310,7 +315,7 @@ public class UI_IngamePopup : UI_Popup
                     
                     Vector3 originPosition = particleObject.transform.position;
                     originPosition.y -= 320.0f;
-
+            
                     int degree = Random.Range(0, 360);
                     float radian = degree * Mathf.PI / 180;
                     float distance = Random.Range(10f, 150f);
@@ -318,31 +323,33 @@ public class UI_IngamePopup : UI_Popup
                     originPosition.y += distance * Mathf.Sin(radian);
                     
                     particleObject.transform.position = originPosition;
-                    
+
+                    float duration = 0.0f;
                     ParticleSystem[] particleSystems = particleObject.GetComponentsInChildren<ParticleSystem>();
                     foreach (ParticleSystem system in particleSystems)
                     {
                         system.loop = true;
                         system.startColor = particleColor;
 
-                        system.transform.DOScale(Vector3.one * 0.5f, 1.0f)
-                            .OnComplete(() => Managers.Resource.Destroy(particleObject));
+                        if (duration < system.duration)
+                            duration = system.duration;
+                            
+                        system.transform.DOScale(Vector3.one * 0.5f, duration)
+                            .OnComplete(() =>
+                            {
+                                Managers.Resource.Destroy(particleObject);
+                                Debug.Log($"duration => {duration}");
+                                GetImage((int) Images.BossImage).transform.DOPunchRotation(Vector3.one, 1.5f)
+                                    .OnComplete(() =>
+                                    {
+                                        GetImage((int) Images.BossImage).transform.DORotate(Vector3.zero, 0.25f);
+                                    });
+                            });
                     }
-
-                    
-                    GetImage((int) Images.BossImage).transform.DOPunchRotation(Vector3.one, 1.5f).SetDelay(0.5f).OnComplete(() =>
-                        GetImage((int) Images.BossImage).transform.DORotate(Vector3.zero, 0.25f));
+            
                     Managers.Resource.Destroy(go);
                 });
             });
-
-            // go.transform.DOMove(_characterItems[0].transform.position, 1.0f).SetDelay(particleSystem.startLifetime).OnComplete(() =>
-            // {
-            //     go.transform.DOScale(Vector3.one * 0.7f, 0.15f).OnComplete(() =>
-            //     {
-            //         Managers.Resource.Destroy(go);
-            //     });
-            // });
         }
 
         int puzzleCount = 0;
@@ -361,57 +368,6 @@ public class UI_IngamePopup : UI_Popup
         }
 
         Debug.Log($"rowFlag => {rowFlag}, colFlag => {colFlag}, crossRightFlag => {crossRightFlag}, crossLeftFlag => {crossLeftFlag}");
-    }
-
-    void CheckBingo()
-    {
-        int rowFlag, rowLineFlag;
-        int colFlag, colLineFlag;
-        int crossRightFlag = 0, crossRightLineFlag = 0;
-        int crossLeftFlag = 0, crossLeftLineFlag = 0;
-        int sum = 0;
-        int row, col;
-        
-        for (row = 0; row < _uiTileItems.GetLength(0); row++)
-        {
-            rowFlag = 0;
-            colFlag = 0;
-            
-            for (col = 0; col < _uiTileItems.GetLength(1); col++)
-            {
-                UI_TileItem uiTileItem = _uiTileItems[row, col];
-                if (uiTileItem != null && uiTileItem.PuzzleItem != null)
-                {
-                    rowFlag++;
-                }
-
-                uiTileItem = _uiTileItems[col, row];
-                if (uiTileItem != null && uiTileItem.PuzzleItem != null)
-                {
-                    colFlag++;
-                }
-            }
-
-            if (colFlag == 5)
-                sum++;
-
-            if (rowFlag == 5)
-                sum++;
-            
-            if (_uiTileItems[row, row].PuzzleItem != null)
-                crossRightFlag++;
-
-            if (_uiTileItems[5 - 1 - row, row].PuzzleItem != null)
-                crossLeftFlag++;
-
-            if (crossRightFlag == 5)
-                sum++;
-
-            if (crossLeftFlag == 5)
-                sum++;
-        }
-        
-        Debug.Log($"Bingo Count = {sum}");
     }
 
     void MakeMap()
@@ -437,7 +393,8 @@ public class UI_IngamePopup : UI_Popup
                     UI_PuzzleItem puzzleItem = Managers.UI.MakeSubItem<UI_PuzzleItem>(uiTileItem.transform);
                     RectTransform rectTransform = puzzleItem.GetComponent<RectTransform>();
                     rectTransform.anchoredPosition = Vector2.zero;
-                    
+
+                    uiTileItem.Init();
                     uiTileItem.SetPuzzleItem(puzzleItem);
                     uiTileItem.PuzzleItem.SetState(Define.PuzzleState.Impossible);
                 }
@@ -489,14 +446,69 @@ public class UI_IngamePopup : UI_Popup
         foreach (Transform t in parent.transform)
             Managers.Resource.Destroy(t.gameObject);
 
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < Define.TeamCountMax; i++)
         {
             if (_characterItems.Count <= i)
                 _characterItems.Add(Managers.UI.MakeSubItem<UI_CharacterItem>(parent.transform));
 
             Data.CharacterData characterData = null;
-            Managers.Data.CharacterDict.TryGetValue(i + 1, out characterData);
+            Managers.Data.CharacterDict.TryGetValue(Managers.Main.TeamIds[i], out characterData);
             _characterItems[i].SetCharacterData(characterData);
         }
     }
 }
+
+#region Not Used
+/*
+    void CheckBingo()
+    {
+        int rowFlag, rowLineFlag;
+        int colFlag, colLineFlag;
+        int crossRightFlag = 0, crossRightLineFlag = 0;
+        int crossLeftFlag = 0, crossLeftLineFlag = 0;
+        int sum = 0;
+        int row, col;
+        
+        for (row = 0; row < _uiTileItems.GetLength(0); row++)
+        {
+            rowFlag = 0;
+            colFlag = 0;
+            
+            for (col = 0; col < _uiTileItems.GetLength(1); col++)
+            {
+                UI_TileItem uiTileItem = _uiTileItems[row, col];
+                if (uiTileItem != null && uiTileItem.PuzzleItem != null)
+                {
+                    rowFlag++;
+                }
+
+                uiTileItem = _uiTileItems[col, row];
+                if (uiTileItem != null && uiTileItem.PuzzleItem != null)
+                {
+                    colFlag++;
+                }
+            }
+
+            if (colFlag == 5)
+                sum++;
+
+            if (rowFlag == 5)
+                sum++;
+            
+            if (_uiTileItems[row, row].PuzzleItem != null)
+                crossRightFlag++;
+
+            if (_uiTileItems[5 - 1 - row, row].PuzzleItem != null)
+                crossLeftFlag++;
+
+            if (crossRightFlag == 5)
+                sum++;
+
+            if (crossLeftFlag == 5)
+                sum++;
+        }
+        
+        Debug.Log($"Bingo Count = {sum}");
+    }
+*/
+#endregion

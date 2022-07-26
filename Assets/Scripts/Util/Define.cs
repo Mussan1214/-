@@ -50,4 +50,6 @@ public class Define
         Earth = 3,
         Wind = 4,
     }
+
+    public const int TeamCountMax = 5;
 }

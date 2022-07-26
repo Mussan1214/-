@@ -14,6 +14,7 @@ namespace Data
 
         public Define.ElementType ElementType;
         public int MaxHp;
+        public int Atk;
         public int SkillID;
 
         public string ThumbnailPath;
