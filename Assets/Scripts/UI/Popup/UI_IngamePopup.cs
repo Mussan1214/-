@@ -15,6 +15,7 @@ public class UI_IngamePopup : UI_Popup
         BingoItems,
         PuzzleItems,
         CharacterPanel,
+        MonsterPanel,
     }
 
     enum Texts
@@ -36,6 +37,8 @@ public class UI_IngamePopup : UI_Popup
     private int _turnActionCount = 2;
 
     private List<UI_CharacterItem> _characterItems = new List<UI_CharacterItem>();
+
+    private MonsterController _monsterController;
 
     public override bool Init()
     {
@@ -311,10 +314,10 @@ public class UI_IngamePopup : UI_Popup
                 {
                     GameObject particleObject = Managers.Resource.Instantiate("Particle/UI/UIParticle_002");
                     particleObject.transform.SetParent(transform);
-                    particleObject.transform.position = GetImage((int) Images.BossImage).transform.position;
+                    particleObject.transform.position = _monsterController.transform.position;
                     
                     Vector3 originPosition = particleObject.transform.position;
-                    originPosition.y -= 320.0f;
+                    // originPosition.y -= 320.0f;
             
                     int degree = Random.Range(0, 360);
                     float radian = degree * Mathf.PI / 180;
@@ -338,12 +341,7 @@ public class UI_IngamePopup : UI_Popup
                             .OnComplete(() =>
                             {
                                 Managers.Resource.Destroy(particleObject);
-                                Debug.Log($"duration => {duration}");
-                                GetImage((int) Images.BossImage).transform.DOPunchRotation(Vector3.one, 1.5f)
-                                    .OnComplete(() =>
-                                    {
-                                        GetImage((int) Images.BossImage).transform.DORotate(Vector3.zero, 0.25f);
-                                    });
+                                _monsterController.OnDamaged(30);
                             });
                     }
             
@@ -455,6 +453,17 @@ public class UI_IngamePopup : UI_Popup
             Managers.Data.CharacterDict.TryGetValue(Managers.Main.TeamIds[i], out characterData);
             _characterItems[i].SetCharacterData(characterData);
         }
+
+        parent = GetObject((int) GameObjects.MonsterPanel);
+        foreach (Transform t in parent.transform)
+            Managers.Resource.Destroy(t.gameObject);
+
+        _monsterController = Managers.UI.MakeSubItem<MonsterController>(parent.transform);
+
+        Data.CharacterData monsterData = null;
+        Managers.Data.CharacterDict.TryGetValue(100, out monsterData);
+        if (monsterData != null)
+            _monsterController.SetData(monsterData);
     }
 }
 

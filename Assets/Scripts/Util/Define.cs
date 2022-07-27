@@ -51,5 +51,11 @@ public class Define
         Wind = 4,
     }
 
+    public enum MonsterGrade
+    {
+        Normal = 0,
+        Boss = 1,
+    }
+
     public const int TeamCountMax = 5;
 }
