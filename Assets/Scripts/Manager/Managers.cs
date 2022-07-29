@@ -41,7 +41,7 @@ public class Managers : MonoBehaviour
             s_dataManager.Init();
             s_main.Init();
 
-            // Application.targetFrameRate = 60;
+            Application.targetFrameRate = 60;
         }
     }
 }

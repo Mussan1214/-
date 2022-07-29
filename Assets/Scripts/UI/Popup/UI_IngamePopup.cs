@@ -312,39 +312,15 @@ public class UI_IngamePopup : UI_Popup
             {
                 go.transform.DOScale(Vector3.one * 0.7f, 0.3f).OnComplete(() =>
                 {
-                    GameObject particleObject = Managers.Resource.Instantiate("Particle/UI/UIParticle_002");
-                    particleObject.transform.SetParent(transform);
-                    particleObject.transform.position = _monsterController.transform.position;
-                    
-                    Vector3 originPosition = particleObject.transform.position;
-                    // originPosition.y -= 320.0f;
-            
-                    int degree = Random.Range(0, 360);
-                    float radian = degree * Mathf.PI / 180;
-                    float distance = Random.Range(10f, 150f);
-                    originPosition.x += distance * Mathf.Cos(radian);
-                    originPosition.y += distance * Mathf.Sin(radian);
-                    
-                    particleObject.transform.position = originPosition;
-
-                    float duration = 0.0f;
-                    ParticleSystem[] particleSystems = particleObject.GetComponentsInChildren<ParticleSystem>();
-                    foreach (ParticleSystem system in particleSystems)
+                    targetObject.transform.DOLocalMoveY(10, 0.3f).From(false).OnComplete(() =>
                     {
-                        system.loop = true;
-                        system.startColor = particleColor;
+                        Vector3 targetPosition = targetObject.transform.localPosition;
+                        targetPosition.y = 0.0f;
+                        targetObject.transform.localPosition = targetPosition;
+                    });
 
-                        if (duration < system.duration)
-                            duration = system.duration;
-                            
-                        system.transform.DOScale(Vector3.one * 0.5f, duration)
-                            .OnComplete(() =>
-                            {
-                                Managers.Resource.Destroy(particleObject);
-                                _monsterController.OnDamaged(30);
-                            });
-                    }
-            
+                    _monsterController.OnDamaged(30);
+
                     Managers.Resource.Destroy(go);
                 });
             });
