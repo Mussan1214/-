@@ -61,12 +61,6 @@ public class UI_IngamePopup : UI_Popup
         if (item != null && item.PuzzleItem != null)
         {
             item.PuzzleItem.SetState(Define.PuzzleState.Impossible);
-
-            // Managers.UI.MakeSubItem<UI_PuzzleItem>(Get<GameObject>((int) GameObjects.PuzzleItems).transform);
-
-            // CheckBingo();
-            // CheckBingoCount(item);
-
             CheckActionCount(item);
         }
     }
@@ -140,6 +134,7 @@ public class UI_IngamePopup : UI_Popup
         
         _bingoItems.Add(tileItem);
         
+        #region Bingo Rule
         int rowFlag = 1;
         int colFlag = 1;
         int crossRightFlag = 1;
@@ -267,19 +262,14 @@ public class UI_IngamePopup : UI_Popup
             foreach (UI_TileItem bingoItem in bingoItems)
                 _bingoItems.Add(bingoItem);
         }
+        #endregion
 
         float refreshDelayTime = 0;
         foreach (UI_TileItem bingoItem in _bingoItems)
         {
-            Color particleColor =
-                bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Fire ? Color.red :
-                bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Water ? Color.blue :
-                bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Earth ? Color.yellow :
-                bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Wind ? Color.green :
-                Color.white;
-            
-            GameObject go = Managers.Resource.Instantiate($"Particle/UI/UIParticle_001");
-            go.transform.SetParent(transform);
+            Color particleColor = Define.PuzzleColor(bingoItem.PuzzleItem.PuzzleType);
+
+            GameObject go = Managers.Resource.Instantiate($"Particle/UI/UIParticle_001", transform);
             go.transform.position = bingoItem.transform.position;
             
             ParticleSystem[] particleSystems = go.GetComponentsInChildren<ParticleSystem>();
@@ -291,9 +281,6 @@ public class UI_IngamePopup : UI_Popup
                 if (refreshDelayTime < particleSystem.duration)
                     refreshDelayTime = particleSystem.duration;
             }
-            
-            Debug.Log($"refreshDalyTime => {refreshDelayTime}");
-
 
             GameObject targetObject = _characterItems[
                 bingoItem.PuzzleItem.PuzzleType == Define.PuzzleType.Fire ? 0 :
@@ -312,6 +299,7 @@ public class UI_IngamePopup : UI_Popup
             {
                 go.transform.DOScale(Vector3.one * 0.7f, 0.3f).OnComplete(() =>
                 {
+                    Managers.Resource.Destroy(go);
                     targetObject.transform.DOLocalMoveY(10, 0.3f).From(false).OnComplete(() =>
                     {
                         Vector3 targetPosition = targetObject.transform.localPosition;
@@ -320,8 +308,6 @@ public class UI_IngamePopup : UI_Popup
                     });
 
                     _monsterController.OnDamaged(30);
-
-                    Managers.Resource.Destroy(go);
                 });
             });
         }
@@ -341,7 +327,7 @@ public class UI_IngamePopup : UI_Popup
             Invoke("RefreshMap", refreshDelayTime);
         }
 
-        Debug.Log($"rowFlag => {rowFlag}, colFlag => {colFlag}, crossRightFlag => {crossRightFlag}, crossLeftFlag => {crossLeftFlag}");
+        // Debug.Log($"rowFlag => {rowFlag}, colFlag => {colFlag}, crossRightFlag => {crossRightFlag}, crossLeftFlag => {crossLeftFlag}");
     }
 
     void MakeMap()

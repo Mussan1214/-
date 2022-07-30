@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Spine.Unity;
@@ -17,6 +18,15 @@ public class BaseController : UI_Base
     }
     
     protected virtual void UpdateAnimation() {}
+
+    public virtual void LookLeft(bool flag)
+    {
+        Vector3 scale = transform.localScale;
+        if (flag)
+            transform.localScale = new Vector3(Math.Abs(scale.x), scale.y, scale.z);
+        else
+            transform.localScale = new Vector3(-Math.Abs(scale.x), scale.y, scale.z);
+    }
     
     #region Spine Animation
 
@@ -64,8 +74,19 @@ public class BaseController : UI_Base
         yield return new WaitForSeconds(length);
         
         PlayAnimation(defaultName, defaultLoop);
-        
     }
+
+    public void PlayAnimationOnce(string skin, string name)
+    {
+        StartCoroutine(PlayAnimationOnceCoroutine(skin, name));
+    }
+
+    public float PlayAnimationOnceWithDuration(string skin, string name)
+    {
+        StartCoroutine(PlayAnimationOnceCoroutine(skin, name));
+        return _anim.skeletonDataAsset.GetSkeletonData(true).FindAnimation(name).Duration;
+    }
+    
     private IEnumerator PlayAnimationOnceCoroutine(string skin, string name)
     {
         bool defaultLoop = _anim.startingLoop;

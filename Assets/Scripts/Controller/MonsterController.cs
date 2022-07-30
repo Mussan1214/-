@@ -3,18 +3,26 @@ using System.Collections;
 using System.Collections.Generic;
 using Data;
 using DG.Tweening;
+using Spine.Unity;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
+using static Define;
 
-public class MonsterController : UI_Base
+public class MonsterController : BaseController
 {
-    enum Images
-    {
-        MonsterController,
-    }
-
     public CharacterData CharacterData { get; private set; }
+
+    private AnimState _animState = AnimState.None;
+    public AnimState AnimState
+    {
+        get { return _animState; }
+        set
+        {
+            _animState = value;
+            UpdateAnimation();
+        }
+    }
 
     private UI_HpBar _hpBar;
     private int _hp;
@@ -23,61 +31,56 @@ public class MonsterController : UI_Base
         get { return _hp; }
         set { _hp = value; RefreshHp(); }
     }
-
-
-
+    
 
     public override bool Init()
     {
         if (base.Init() == false)
             return false;
-
-        Bind<Image>(typeof(Images));
+        
         _hpBar = Utils.FindChild<UI_HpBar>(gameObject, "UI_HpBar", true);
 
-        Image monsterImage = Get<Image>((int) Images.MonsterController);
-        monsterImage.sprite = Managers.Resource.Load<Sprite>(CharacterData.FullImagePath);
-        monsterImage.SetNativeSize();
+        SekSkeletonAsset("Spine/Monster_100/monster_1_SkeletonData");
+        PlayAnimation("idle");
+        _anim.MatchRectTransformWithBounds();
+
+        RectTransform rectTransform = (RectTransform) transform;
+        rectTransform.anchoredPosition = new Vector2(0, -(rectTransform.rect.size.y * 0.5f));
 
         return true;
     }
 
-    private bool isPlayHit = false;
-    
+    protected override void UpdateAnimation()
+    {
+        Init();
+
+        switch (AnimState)
+        {
+            case AnimState.None:
+                break;
+            case AnimState.Idle:
+                PlayAnimation("idle");
+                ChangeSkin("default");
+                break;
+            case AnimState.Damage:
+                float duration = PlayAnimationOnceWithDuration("default", "damage");
+                _anim.DOColor(Define.HitColor, duration * 0.5f).OnComplete(() =>
+                {
+                    _anim.DOColor(Color.white, duration * 0.5f).OnComplete(() => AnimState = AnimState.Idle);
+                });
+                break;
+        }
+    }
+
     public virtual void OnDamaged(int damage)
     {
         Hp = Math.Max(Hp - damage, 0);
+        MakeHitEffect();
 
-        GameObject effectObject = Managers.Resource.Instantiate("Effect/AttackEffect", transform);
-
-        int degree = Random.Range(0, 360);
-        float radian = degree * Mathf.PI / 180;
-        float distance = Random.Range(10f, 150f);
-
-        Vector3 effectPosition = effectObject.transform.position;
-        effectPosition.x += distance * Mathf.Cos(radian);
-        effectPosition.y += distance * Mathf.Sin(radian);
-        effectObject.transform.position = effectPosition;
-
-        Animator animator = effectObject.GetComponent<Animator>();
-        float clipLength = animator.runtimeAnimatorController.animationClips[0].length;
-        Destroy(effectObject, clipLength);
-        
-        if (isPlayHit) return;
-        isPlayHit = true;
-        
-        Vector3 originPosition = transform.position;
-        transform.DOShakePosition(0.5f, Vector3.right * 20f).SetEase(Ease.Flash).OnComplete(() =>
+        if (AnimState != AnimState.Damage)
         {
-            transform.DOMove(originPosition, 0.1f);
-            isPlayHit = false;
-        });
-
-        Color color = new Color(1.0f, 0.5f, 0.5f, 1.0f);
-        Get<Image>((int) Images.MonsterController).DOColor(color, 0.17f).OnComplete(() =>
-        {
-            Get<Image>((int) Images.MonsterController).DOColor(Color.white, 0.33f);
-        });
+            AnimState = AnimState.Damage;
+        }
     }
 
     public void SetData(CharacterData characterData)
@@ -93,5 +96,23 @@ public class MonsterController : UI_Base
     {
         if (_hpBar != null)
             _hpBar.SetValue((float) Hp / CharacterData.MaxHp);
+    }
+    
+    void MakeHitEffect()
+    {
+        GameObject effectObject = Managers.Resource.Instantiate("Effect/AttackEffect", transform);
+
+        int degree = Random.Range(0, 180);
+        float radian = degree * Mathf.PI / 180;
+        float distance = Random.Range(30f, 200f);
+
+        Vector3 effectPosition = effectObject.transform.position;
+        effectPosition.x += distance * Mathf.Cos(radian);
+        effectPosition.y += distance * Mathf.Sin(radian);
+        effectObject.transform.position = effectPosition;
+
+        Animator animator = effectObject.GetComponent<Animator>();
+        float clipLength = animator.runtimeAnimatorController.animationClips[0].length;
+        Destroy(effectObject, clipLength);
     }
 }

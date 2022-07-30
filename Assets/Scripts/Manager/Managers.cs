@@ -37,7 +37,6 @@ public class Managers : MonoBehaviour
             s_instance = Utils.GetOrAddComponent<Managers>(go);
             DontDestroyOnLoad(go);
             
-            // TODO Init
             s_dataManager.Init();
             s_main.Init();
 
