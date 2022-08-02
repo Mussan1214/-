@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -23,10 +24,21 @@ public class UI_PuzzleItem : UI_Base
 
     private Button btn;
 
+    private GameObject particleObject;
+
     private void Awake()
     {
         _canvasGroup = Utils.GetOrAddComponent<CanvasGroup>(gameObject);
         _rectTransform = Utils.GetOrAddComponent<RectTransform>(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        if (particleObject != null)
+        {
+            Managers.Resource.Destroy(particleObject);
+            particleObject = null;
+        }
     }
 
     public override bool Init()
@@ -59,6 +71,17 @@ public class UI_PuzzleItem : UI_Base
         PuzzleType = puzzleType;
         Get<Image>((int)Images.PuzzleImage).sprite = 
         Managers.Resource.Load<Sprite>($"Sprites/Stone/{((int) puzzleType).ToString()}");
+    }
+    
+    public void RefreshAnimation()
+    {
+        Init();
+
+        if (particleObject == null)
+            particleObject = Managers.Resource.Instantiate($"Particle/UI/UIParticle_001", transform);
+        
+        Get<Image>((int)Images.PuzzleImage).DOFade(0.0f, 0.0f);
+        Get<Image>((int)Images.PuzzleImage).DOFade(1.0f, 0.15f).SetDelay(0.3f).OnComplete(OnDestroy);
     }
     
     #region Handler Event

@@ -22,11 +22,6 @@ public class UI_IngamePopup : UI_Popup
     {
         TurnCountText,
     }
-
-    enum Images
-    {
-        BossImage
-    }
     
     private Vector2Int _mapSize = new Vector2Int(5, 5);
     private UI_TileItem[,] _uiTileItems;
@@ -47,7 +42,6 @@ public class UI_IngamePopup : UI_Popup
         
         Bind<GameObject>(typeof(GameObjects));
         BindText(typeof(Texts));
-        BindImage(typeof(Images));
 
         MakeMap();
         MakeCharacter();
@@ -57,7 +51,6 @@ public class UI_IngamePopup : UI_Popup
 
     void OnDropItem(UI_TileItem item)
     {
-        Debug.Log($"{item.Row}x{item.Col}");
         if (item != null && item.PuzzleItem != null)
         {
             item.PuzzleItem.SetState(Define.PuzzleState.Impossible);
@@ -116,9 +109,11 @@ public class UI_IngamePopup : UI_Popup
 
 
             GameObject parent = Get<GameObject>((int) GameObjects.PuzzleItems);
-            Managers.UI.MakeSubItem<UI_PuzzleItem>(parent.transform);
-            Managers.UI.MakeSubItem<UI_PuzzleItem>(parent.transform);
-            
+            UI_PuzzleItem puzzleItem = Managers.UI.MakeSubItem<UI_PuzzleItem>(parent.transform);
+            puzzleItem.RefreshAnimation();
+            puzzleItem = Managers.UI.MakeSubItem<UI_PuzzleItem>(parent.transform);
+            puzzleItem.RefreshAnimation();
+
             HorizontalLayoutGroup horizontal = parent.GetComponent<HorizontalLayoutGroup>();
             horizontal.enabled = true;
             LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform) horizontal.transform);
@@ -381,6 +376,10 @@ public class UI_IngamePopup : UI_Popup
                 if (row == 0 || row == 4 || col == 0 || col == 4 || (row == 2 && col == 2))
                 {
                     uiTileItem.PuzzleItem.SetPuzzleType((Define.PuzzleType) Random.Range(1, 5));
+                    uiTileItem.PuzzleItem.RefreshAnimation();
+                    // GameObject go = Managers.Resource.Instantiate($"Particle/UI/UIParticle_001", uiTileItem.transform);
+                    // go.transform.localPosition = Vector3.zero;
+                    // Destroy(go, 0.5f);
                 }
                 else
                 {
