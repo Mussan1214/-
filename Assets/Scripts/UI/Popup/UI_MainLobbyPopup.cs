@@ -24,6 +24,7 @@ public class UI_MainLobbyPopup : UI_Popup
 
     private void OnClickAdventure(PointerEventData eventData)
     {
+        // ClosePopupUI();
         Managers.UI.ShowPopupUI<UI_IngamePopup>();
     }
 }

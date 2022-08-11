@@ -227,8 +227,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4287086312
+  m_fontColor: {r: 0.909804, g: 0.74509805, b: 0.5294118, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1437,8 +1437,9 @@ GameObject:
   m_Component:
   - component: {fileID: 7391726156688628897}
   - component: {fileID: 7391726156688628910}
+  - component: {fileID: 525330154317776335}
   m_Layer: 5
-  m_Name: PuzzleItems
+  m_Name: BlockItems
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1494,6 +1495,18 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!225 &525330154317776335
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7391726156688628896}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &7391726156754806958
 GameObject:
   m_ObjectHideFlags: 0
@@ -1775,7 +1788,7 @@ GameObject:
   - component: {fileID: 7391726156942015145}
   - component: {fileID: 7391726156942015144}
   m_Layer: 5
-  m_Name: NextPuzzlePanel
+  m_Name: NextBlockPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

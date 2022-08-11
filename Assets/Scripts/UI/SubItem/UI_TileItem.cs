@@ -21,7 +21,7 @@ public class UI_TileItem : UI_Base
     public int Row { get; private set; } = -1;
     public int Col { get; private set; } = -1;
 
-    public UI_PuzzleItem PuzzleItem { get; private set; } = null;
+    public UI_BlockItem BlockItem { get; private set; } = null;
 
     private Action<UI_TileItem> _onDrop;
     
@@ -46,25 +46,25 @@ public class UI_TileItem : UI_Base
         _onDrop = onDrop;
     }
 
-    public void SetPuzzleItem(UI_PuzzleItem uiPuzzleItem)
+    public void SetPuzzleItem(UI_BlockItem uiBlockItem)
     {
         CanvasGroup canvasGroup = Get<CanvasGroup>((int) CanvasGroups.UI_TileItem);
         
-        if (uiPuzzleItem != null)
+        if (uiBlockItem != null)
         {
-            PuzzleItem = uiPuzzleItem;
+            BlockItem = uiBlockItem;
             canvasGroup.alpha = 1.0f;
         }
         else
         {
-            if (PuzzleItem != null)
+            if (BlockItem != null)
             {
-                Managers.Resource.Destroy(PuzzleItem.gameObject);
-                PuzzleItem = null;
+                Managers.Resource.Destroy(BlockItem.gameObject);
+                BlockItem = null;
             }
         }
 
-        canvasGroup.blocksRaycasts = PuzzleItem == null;
+        canvasGroup.blocksRaycasts = BlockItem == null;
     }
 
     public void Active(bool active)
@@ -75,7 +75,7 @@ public class UI_TileItem : UI_Base
             canvasGroup.alpha = active ? 1.0f : 0.3f;
             if (active)
             {
-                if (PuzzleItem == null)
+                if (BlockItem == null)
                     canvasGroup.blocksRaycasts = true;
                 else
                     canvasGroup.blocksRaycasts = false;
@@ -94,9 +94,9 @@ public class UI_TileItem : UI_Base
             eventData.pointerDrag.transform.SetParent(transform);
             eventData.pointerDrag.transform.localPosition = Vector3.zero;
 
-            UI_PuzzleItem uiPuzzleItem = eventData.pointerDrag.GetComponent<UI_PuzzleItem>();
-            if (uiPuzzleItem != null)
-                SetPuzzleItem(uiPuzzleItem);
+            UI_BlockItem uiBlockItem = eventData.pointerDrag.GetComponent<UI_BlockItem>();
+            if (uiBlockItem != null)
+                SetPuzzleItem(uiBlockItem);
             
             _onDrop?.Invoke(this);
         }

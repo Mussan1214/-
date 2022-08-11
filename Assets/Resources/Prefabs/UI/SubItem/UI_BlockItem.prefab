@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5218068794759273290}
   - component: {fileID: 8299332226702646512}
   m_Layer: 5
-  m_Name: UI_PuzzleItem
+  m_Name: UI_BlockItem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

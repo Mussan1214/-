@@ -7,15 +7,15 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
-public class UI_PuzzleItem : UI_Base
+public class UI_BlockItem : UI_Base
 {
     enum Images
     {
         PuzzleImage,
     }
     
-    public Define.PuzzleState PuzzleState { get; private set; }
-    public Define.PuzzleType PuzzleType { get; private set; }
+    public Define.BlockState BlockState { get; private set; }
+    public Define.BlockType BlockType { get; private set; }
 
     private CanvasGroup _canvasGroup;
     private RectTransform _rectTransform;
@@ -51,43 +51,50 @@ public class UI_PuzzleItem : UI_Base
         gameObject.BindEvent(OnDrag, Define.UIEvent.Drag);
         gameObject.BindEvent(OnEndDrag, Define.UIEvent.EndDrag);
         
-        SetPuzzleType((Define.PuzzleType) Random.Range(1, 5));
+        SetPuzzleType((Define.BlockType) Random.Range(1, 5));
         
         return true;
     }
 
-    public void SetState(Define.PuzzleState state)
+    public void SetState(Define.BlockState state)
     {
-        PuzzleState = state;
-        if (PuzzleState == Define.PuzzleState.Impossible)
+        BlockState = state;
+        if (BlockState == Define.BlockState.Impossible)
         {
             _canvasGroup.blocksRaycasts = false;
             _canvasGroup.alpha = 1.0f;
         }
     }
 
-    public void SetPuzzleType(Define.PuzzleType puzzleType)
+    public void SetPuzzleType(Define.BlockType blockType)
     {
-        PuzzleType = puzzleType;
+        BlockType = blockType;
         Get<Image>((int)Images.PuzzleImage).sprite = 
-        Managers.Resource.Load<Sprite>($"Sprites/Stone/{((int) puzzleType).ToString()}");
+        Managers.Resource.Load<Sprite>($"Sprites/Stone/{((int) blockType).ToString()}");
     }
     
     public void RefreshAnimation()
     {
-        Init();
+        if (Init())
+        {
+            Color color = Get<Image>((int) Images.PuzzleImage).color;
+            color.a = 0;
+            Get<Image>((int) Images.PuzzleImage).color = color;
+        }
 
         if (particleObject == null)
             particleObject = Managers.Resource.Instantiate($"Particle/UI/UIParticle_001", transform);
         
-        Get<Image>((int)Images.PuzzleImage).DOFade(0.0f, 0.0f);
-        Get<Image>((int)Images.PuzzleImage).DOFade(1.0f, 0.15f).SetDelay(0.3f).OnComplete(OnDestroy);
+        Get<Image>((int)Images.PuzzleImage).DOFade(0.0f, 0.0f).OnComplete(() =>
+        {
+            Get<Image>((int)Images.PuzzleImage).DOFade(1.0f, 0.15f).SetDelay(0.3f).OnComplete(OnDestroy); 
+        });
     }
     
     #region Handler Event
     void OnBeginDrag(PointerEventData eventData)
     {
-        if (PuzzleState == Define.PuzzleState.Impossible)
+        if (BlockState == Define.BlockState.Impossible)
             return;
         
         _previousParent = transform.parent;
@@ -99,7 +106,7 @@ public class UI_PuzzleItem : UI_Base
 
     void OnDrag(PointerEventData eventData)
     {
-        if (PuzzleState == Define.PuzzleState.Impossible)
+        if (BlockState == Define.BlockState.Impossible)
             return;
         
         _rectTransform.position = eventData.position;
@@ -107,7 +114,7 @@ public class UI_PuzzleItem : UI_Base
 
     void OnEndDrag(PointerEventData eventData)
     {
-        if (PuzzleState == Define.PuzzleState.Impossible)
+        if (BlockState == Define.BlockState.Impossible)
             return;
         
         if (transform.parent == _previousParent)

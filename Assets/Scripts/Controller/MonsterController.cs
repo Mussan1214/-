@@ -1,11 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using Data;
 using DG.Tweening;
-using Spine.Unity;
 using UnityEngine;
-using UnityEngine.UI;
 using Random = UnityEngine.Random;
 using static Define;
 
@@ -58,10 +54,12 @@ public class MonsterController : BaseController
         {
             case AnimState.None:
                 break;
+            
             case AnimState.Idle:
                 PlayAnimation("idle");
                 ChangeSkin("default");
                 break;
+            
             case AnimState.Damage:
                 float duration = PlayAnimationOnceWithDuration("default", "damage");
                 _anim.DOColor(Define.HitColor, duration * 0.5f).OnComplete(() =>
@@ -72,10 +70,31 @@ public class MonsterController : BaseController
         }
     }
 
-    public virtual void OnDamaged(int damage)
+    public virtual void OnDamaged(int damage, ElementType elementType)
     {
         Hp = Math.Max(Hp - damage, 0);
-        MakeHitEffect();
+        // MakeHitEffect(damage);
+        
+        GameObject effectObject = Managers.Resource.Instantiate("Effect/AttackEffect", transform);
+
+        int degree = Random.Range(0, 180);
+        float radian = degree * Mathf.PI / 180;
+        float distance = Random.Range(30f, 200f);
+
+        Vector3 effectPosition = effectObject.transform.position;
+        effectPosition.x += distance * Mathf.Cos(radian);
+        effectPosition.y += distance * Mathf.Sin(radian);
+        effectObject.transform.position = effectPosition;
+
+        Animator animator = effectObject.GetComponent<Animator>();
+        float clipLength = animator.runtimeAnimatorController.animationClips[0].length;
+        Destroy(effectObject, clipLength);
+
+        GameObject damageObject = Managers.Resource.Instantiate("UI/UI_OnDamage", transform);
+        effectPosition.y += 50.0f;
+        damageObject.transform.position = effectPosition;
+        UI_OnDamage uiOnDamage = damageObject.GetComponent<UI_OnDamage>();
+        uiOnDamage.SetDamage(damage, elementType);
 
         if (AnimState != AnimState.Damage)
         {
@@ -98,7 +117,7 @@ public class MonsterController : BaseController
             _hpBar.SetValue((float) Hp / CharacterData.MaxHp);
     }
     
-    void MakeHitEffect()
+    void MakeHitEffect(int damage)
     {
         GameObject effectObject = Managers.Resource.Instantiate("Effect/AttackEffect", transform);
 
@@ -114,5 +133,11 @@ public class MonsterController : BaseController
         Animator animator = effectObject.GetComponent<Animator>();
         float clipLength = animator.runtimeAnimatorController.animationClips[0].length;
         Destroy(effectObject, clipLength);
+
+        GameObject damageObject = Managers.Resource.Instantiate("UI/UI_OnDamage", transform);
+        effectPosition.y += 50.0f;
+        damageObject.transform.position = effectPosition;
+        UI_OnDamage uiOnDamage = damageObject.GetComponent<UI_OnDamage>();
+        uiOnDamage.SetDamage(damage, ElementType.Fire);
     }
 }

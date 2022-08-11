@@ -24,6 +24,7 @@ public class UI_TitlePopup : UI_Popup
     {
         Debug.Log($"Next Lobby");
 
+        ClosePopupUI();
         Managers.UI.ShowPopupUI<UI_MainLobbyPopup>();
     }
 }
