@@ -29,6 +29,13 @@ public class Define
         Game
     }
 
+    public enum PuzzleResult
+    {
+        None,
+        Win,
+        Lose
+    }
+
     public enum PuzzleState
     {
         None = 0,
@@ -39,7 +46,10 @@ public class Define
         
         Wait,
         
+        CheckTurn,
         NextTurn,
+        
+        CheckResult,
     }
 
     public enum BlockState
@@ -77,7 +87,7 @@ public class Define
         None,
         Idle,
         Damage,
-        
+        Attack,
     }
 
     public const int TeamCountMax = 5;

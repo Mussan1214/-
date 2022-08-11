@@ -70,8 +70,48 @@ public class MonsterController : BaseController
         }
     }
 
-    public virtual void OnDamaged(int damage, ElementType elementType)
+    public virtual void OnDamaged(int damage, CharacterData characterData)
     {
+        float elementDamageRate = 1.0f;
+        if (CharacterData.ElementType != characterData.ElementType)
+        {
+            switch (CharacterData.ElementType)
+            {
+                case ElementType.None:
+                    break;
+                case ElementType.Fire:
+                    if (characterData.ElementType == ElementType.Water)
+                        elementDamageRate = 2.0f;
+                    else if (characterData.ElementType == ElementType.Earth)
+                        elementDamageRate = 0.5f;
+                    break;
+                
+                case ElementType.Water:
+                    if (characterData.ElementType == ElementType.Wind)
+                        elementDamageRate = 2.0f;
+                    else if (characterData.ElementType == ElementType.Fire)
+                        elementDamageRate = 0.5f;
+                    break;
+                
+                case ElementType.Earth:
+                    if (characterData.ElementType == ElementType.Fire)
+                        elementDamageRate = 2.0f;
+                    else if (characterData.ElementType == ElementType.Wind)
+                        elementDamageRate = 0.5f;
+                    break;
+                
+                case ElementType.Wind:
+                    if (characterData.ElementType == ElementType.Earth)
+                        elementDamageRate = 2.0f;
+                    else if (characterData.ElementType == ElementType.Water)
+                        elementDamageRate = 0.5f;
+                    break;
+            }
+        }
+
+        damage = (int) ((float) damage * elementDamageRate);
+        Debug.Log($"Damage => {damage}");
+        
         Hp = Math.Max(Hp - damage, 0);
         // MakeHitEffect(damage);
         
@@ -93,8 +133,9 @@ public class MonsterController : BaseController
         GameObject damageObject = Managers.Resource.Instantiate("UI/UI_OnDamage", transform);
         effectPosition.y += 50.0f;
         damageObject.transform.position = effectPosition;
+        
         UI_OnDamage uiOnDamage = damageObject.GetComponent<UI_OnDamage>();
-        uiOnDamage.SetDamage(damage, elementType);
+        uiOnDamage.SetDamage(damage, characterData.ElementType);
 
         if (AnimState != AnimState.Damage)
         {

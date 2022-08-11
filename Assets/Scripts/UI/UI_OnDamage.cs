@@ -33,7 +33,8 @@ public class UI_OnDamage : UI_Base
         {
             GetText((int) Texts.UI_OnDamage).DOColor(Define.AlphaZero, 0.3f);
             GetText((int) Texts.UI_OnDamage).transform
-            .DOLocalMoveY(GetText((int) Texts.UI_OnDamage).transform.localPosition.y + 50f, 0.3f)
+            .DOLocalMoveY(50f, 0.3f)
+            .SetRelative()
             .OnComplete(() =>
             {
                 Managers.Resource.Destroy(gameObject);

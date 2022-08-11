@@ -1,8 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+
+using static Define;
 
 public class UI_CharacterItem : UI_Base
 {
@@ -17,7 +21,41 @@ public class UI_CharacterItem : UI_Base
     {
         HpBar
     }
-    
+
+    private AnimState _animState = AnimState.None;
+
+    public AnimState AnimState
+    {
+        get { return _animState; }
+        set
+        {
+            if (_animState == value) return;
+            
+            _animState = value;
+            UpdateAnimation();
+        }
+    }
+
+    private void UpdateAnimation()
+    {
+        switch (AnimState)
+        {
+            case AnimState.Idle:
+                break;
+            
+            case AnimState.Damage:
+                break;
+            
+            case AnimState.Attack:
+                transform.DOLocalMoveY(10.0f, 0.3f).From(false)
+                .OnComplete(() =>
+                {
+                    AnimState = AnimState.Idle;
+                });
+                break;
+        }
+    }
+
     public Data.CharacterData CharacterData { get; private set; }
 
     private int _hp;
@@ -66,6 +104,8 @@ public class UI_CharacterItem : UI_Base
     {
         Get<Slider>((int) Sliders.HpBar).value = (float) Hp / CharacterData.MaxHp;
     }
+    
+    
 
     void OnPressed(PointerEventData eventData)
     {

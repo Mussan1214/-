@@ -30,6 +30,7 @@ public class UI_IngamePopup : UI_Popup
     }
     
     #region Puzzle
+    public PuzzleResult PuzzleResult { get; private set; }
     public PuzzleState PuzzleState { get; private set; }
     
     private Vector2Int _mapSize = new Vector2Int(5, 5);
@@ -99,7 +100,44 @@ public class UI_IngamePopup : UI_Popup
                 Get<CanvasGroup>((int) CanvasGroups.BlockItems).blocksRaycasts = false;
                 break;
             
+            case PuzzleState.CheckTurn:
+                if (_monsterController.Hp <= 0)
+                {
+                    SetPuzzleResult(PuzzleResult.Win);
+                    SetPuzzleState(PuzzleState.CheckResult);
+                }
+                else
+                {
+                    foreach (UI_CharacterItem uiCharacterItem in _characterItems)
+                    {
+                        if (uiCharacterItem.CharacterData != null && uiCharacterItem.Hp > 0)
+                        {
+                            SetPuzzleState(PuzzleState.NextTurn);
+                            return;
+                        }
+                    }
+                    
+                    SetPuzzleResult(PuzzleResult.Lose);
+                    SetPuzzleState(PuzzleState.CheckResult);
+                }
+                break;
+            
             case PuzzleState.NextTurn:
+                int puzzleCount = 0;
+                for (int row = 0; row < _uiTileItems.GetLength(0); row++)
+                {
+                    for (int col = 0; col < _uiTileItems.GetLength(1); col++)
+                    {
+                        if (_uiTileItems[row, col].BlockItem != null)
+                            puzzleCount++;
+                    }
+                }
+
+                if (puzzleCount == _mapSize.x * _mapSize.y)
+                {
+                    RefreshMap();
+                }
+                
                 for (int row = 0; row < _uiTileItems.GetLength(0); row++)
                 {
                     for (int col = 0; col < _uiTileItems.GetLength(1); col++)
@@ -116,6 +154,22 @@ public class UI_IngamePopup : UI_Popup
                 SetPuzzleState(PuzzleState.Play);
                 break;
             
+            case PuzzleState.CheckResult:
+                Managers.UI.ShowPopupUI<UI_PuzzleResult>().SetInfo(PuzzleResult);
+                if (PuzzleResult == PuzzleResult.Win)
+                {
+                    Debug.Log("승리 결과창");
+                }
+                else if (PuzzleResult == PuzzleResult.Lose)
+                {
+                    Debug.Log("패배 결과창");
+                }
+                else
+                {
+                    Debug.Log("버그");
+                }
+                break;
+            
             default:
                 Debug.Log($"해당 상태 변화를 정의해주세요 => {puzzleState}");
                 break;
@@ -126,6 +180,11 @@ public class UI_IngamePopup : UI_Popup
     {
         yield return new WaitForSeconds(delay);
         SetPuzzleState(puzzleState);
+    }
+
+    void SetPuzzleResult(PuzzleResult puzzleResult)
+    {
+        PuzzleResult = puzzleResult;
     }
 
     private void CheckActionCount(UI_TileItem item)
@@ -305,6 +364,17 @@ public class UI_IngamePopup : UI_Popup
         #endregion
         
         _actionItems.Clear();
+
+        Dictionary<ElementType, int> elementMatchCount = new Dictionary<ElementType, int>();
+        foreach (UI_TileItem bingoItem in _bingoItems)
+        {
+            ElementType elementType = (ElementType) (int) bingoItem.BlockItem.BlockType;
+            if (elementMatchCount.ContainsKey(elementType) == false)
+                elementMatchCount[elementType] = 1;
+            else
+                elementMatchCount[elementType]++;
+        }
+        
         
         float refreshDelayTime = 0;
         foreach (UI_TileItem bingoItem in _bingoItems)
@@ -324,60 +394,50 @@ public class UI_IngamePopup : UI_Popup
                     refreshDelayTime = particleSystem.duration;
             }
 
-            GameObject targetObject = _characterItems[
-                bingoItem.BlockItem.BlockType == BlockType.Fire ? 0 :
-                bingoItem.BlockItem.BlockType == BlockType.Water ? 1 :
-                bingoItem.BlockItem.BlockType == BlockType.Earth ? 3 :
-                bingoItem.BlockItem.BlockType == BlockType.Wind ? 2 :
-                4
-            ].gameObject;
-
-            List<GameObject> targetObjects = new List<GameObject>();
             foreach (UI_CharacterItem uiCharacterItem in _characterItems)
             {
                 if ((int) uiCharacterItem.CharacterData.ElementType == (int) bingoItem.BlockItem.BlockType)
-                    targetObjects.Add(uiCharacterItem.gameObject);
-            }
-            
-            Vector3[] paths = new Vector3[3];
-            paths.SetValue(go.transform.position, 0);
-            paths.SetValue(targetObject.transform.position, 2);
-            paths.SetValue(new Vector3( paths[0].x + (paths[2].x - paths[0].x), paths[0].y + (paths[2].y - paths[0].y) * 0.5f, 0), 1);
-
-            go.transform.DOPath(paths, 1.0f, PathType.CatmullRom).SetEase(Ease.OutCubic).SetDelay(refreshDelayTime * 0.5f).OnComplete(() =>
-            {
-                go.transform.DOScale(Vector3.one * 0.7f, 0.3f).OnComplete(() =>
                 {
-                    Managers.Resource.Destroy(go);
-                    targetObject.transform.DOLocalMoveY(10, 0.3f).From(false).OnComplete(() =>
+                    float delay = 1.0f;
+                    DOTween.To(() => delay, value => delay = value, 1.0f, 1.0f)
+                    .OnComplete(() =>
                     {
-                        Vector3 targetPosition = targetObject.transform.localPosition;
-                        targetPosition.y = 0.0f;
-                        targetObject.transform.localPosition = targetPosition;
-                    });
+                        GameObject copyGameObject = Instantiate(go, transform);
+                        copyGameObject.transform.position = bingoItem.transform.position;
 
-                    _monsterController.OnDamaged(30, (ElementType)((int) bingoItem.BlockItem.BlockType));
+                        Vector3[] paths = new Vector3[3];
+                        paths.SetValue(copyGameObject.transform.position, 0);
+                        paths.SetValue(uiCharacterItem.transform.position, 2);
+                        paths.SetValue(new Vector3( paths[0].x + (paths[2].x - paths[0].x), paths[0].y + (paths[2].y - paths[0].y) * 0.5f, 0), 1);
+
+                        copyGameObject.transform.DOPath(paths, 1.0f, PathType.CatmullRom)
+                        .SetEase(Ease.OutCubic)
+                        .SetDelay(0.15f)
+                        .OnStart(() =>
+                        {
+                            if (go != null)
+                            {
+                                Destroy(go);
+                                go = null;
+                            }
+                        })
+                        .OnComplete(() =>
+                        {
+                            copyGameObject.transform.DOScale(Vector3.one * 0.7f, 0.3f)
+                            .OnComplete(() =>
+                            {
+                                Managers.Resource.Destroy(copyGameObject);
+                                uiCharacterItem.AnimState = AnimState.Attack;
                     
-                });
-            });
-        }
-
-        int puzzleCount = 0;
-        for (int row = 0; row < _uiTileItems.GetLength(0); row++)
-        {
-            for (int col = 0; col < _uiTileItems.GetLength(1); col++)
-            {
-                if (_uiTileItems[row, col].BlockItem != null)
-                    puzzleCount++;
+                                _monsterController.OnDamaged(30, uiCharacterItem.CharacterData);
+                            });
+                        });
+                    });
+                }
             }
         }
 
-        if (puzzleCount == _mapSize.x * _mapSize.y)
-        {
-            Invoke("RefreshMap", refreshDelayTime);
-        }
-        
-        StartCoroutine(SetPuzzleStateCoroutine(PuzzleState.NextTurn, refreshDelayTime));
+        StartCoroutine(SetPuzzleStateCoroutine(PuzzleState.CheckTurn, refreshDelayTime));
     }
 
     void MakeMap()
