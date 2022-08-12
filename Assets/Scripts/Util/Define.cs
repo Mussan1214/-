@@ -47,6 +47,7 @@ public class Define
         Wait,
         
         CheckTurn,
+        EnemyTurn,
         NextTurn,
         
         CheckResult,
@@ -94,6 +95,8 @@ public class Define
     public const int TurnActionCountMax = 2;
 
     public static Color AlphaZero = new Color(1.0f, 1.0f, 1.0f, 0.0f);
+    public static Color AlphaHalf = new Color(1.0f, 1.0f, 1.0f, 0.5f);
+    
     public static Color HitColor = new Color(1.0f, 0.5f, 0.5f, 1.0f);
 
     public static Color HalfRed = new Color(1.0f, 0.5f, 0.5f, 1.0f);

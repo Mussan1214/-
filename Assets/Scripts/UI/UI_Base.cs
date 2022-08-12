@@ -40,7 +40,7 @@ public class UI_Base : MonoBehaviour
                 objects[i] = Utils.FindChild<T>(gameObject, names[i], true);
             
             if (objects[i] == null)
-                Debug.Log($"Failed to bind({names[i]})");
+                Debug.Log($"Failed to bind({gameObject.name}=>{names[i]})");
         }
     }
 

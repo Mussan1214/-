@@ -1,10 +1,8 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 using static Define;
@@ -45,6 +43,9 @@ public class UI_IngamePopup : UI_Popup
     #region Battle
     private List<UI_CharacterItem> _characterItems = new List<UI_CharacterItem>();
     private MonsterController _monsterController;
+
+    private bool _monsterAction = false;
+    private int _monsterActionTurn = 3;
     #endregion
 
     public override bool Init()
@@ -85,6 +86,8 @@ public class UI_IngamePopup : UI_Popup
                 _mapSize = new Vector2Int(5, 5);
                 _turn = 1;
                 _turnActionCount = 0;
+
+                _monsterActionTurn = 3;
                 
                 MakeMap();
                 MakeCharacter();
@@ -112,7 +115,10 @@ public class UI_IngamePopup : UI_Popup
                     {
                         if (uiCharacterItem.CharacterData != null && uiCharacterItem.Hp > 0)
                         {
-                            SetPuzzleState(PuzzleState.NextTurn);
+                            if (_monsterAction == false && _turn >= _monsterActionTurn && _turn % _monsterActionTurn == 0)
+                                SetPuzzleState(PuzzleState.EnemyTurn);
+                            else
+                                SetPuzzleState(PuzzleState.NextTurn);
                             return;
                         }
                     }
@@ -120,6 +126,45 @@ public class UI_IngamePopup : UI_Popup
                     SetPuzzleResult(PuzzleResult.Lose);
                     SetPuzzleState(PuzzleState.CheckResult);
                 }
+                break;
+            
+            case PuzzleState.EnemyTurn:
+                float refreshDelayTime = 1.0f;
+                _monsterAction = true;
+                
+                UI_CharacterItem target = null;
+                foreach (UI_CharacterItem uiCharacterItem in _characterItems)
+                {
+                    if (uiCharacterItem.CharacterData != null && uiCharacterItem.Hp > 0)
+                    {
+                        target = uiCharacterItem;
+                        break;
+                    }
+                }
+
+                GameObject go = Managers.Resource.Instantiate($"Particle/UI/UIParticle_001", transform);
+                Vector3 originPosition = _monsterController.transform.position;
+                originPosition.y += ((RectTransform) _monsterController.transform).sizeDelta.y * 0.5f;
+                go.transform.position = originPosition;
+
+                ParticleSystem[] particleSystems = go.GetComponentsInChildren<ParticleSystem>();
+                foreach (ParticleSystem particleSystem in particleSystems)
+                {
+                    particleSystem.loop = true;
+                    particleSystem.startColor = ElementColor(_monsterController.CharacterData.ElementType);
+
+                    if (refreshDelayTime < particleSystem.duration)
+                        refreshDelayTime = particleSystem.duration;
+                }
+
+                go.transform.DOMove(target.transform.position, refreshDelayTime * 0.5f)
+                .OnComplete(() =>
+                {
+                    target?.OnDamage(_monsterController.CharacterData);
+                    Destroy(go);
+                });
+                
+                StartCoroutine(SetPuzzleStateCoroutine(PuzzleState.CheckTurn, refreshDelayTime));
                 break;
             
             case PuzzleState.NextTurn:
@@ -379,8 +424,16 @@ public class UI_IngamePopup : UI_Popup
         float refreshDelayTime = 0;
         foreach (UI_TileItem bingoItem in _bingoItems)
         {
-            Color particleColor = PuzzleColor(bingoItem.BlockItem.BlockType);
-
+            foreach (UI_CharacterItem uiCharacterItem in _characterItems)
+            {
+                if (uiCharacterItem.CharacterData != null
+                    && uiCharacterItem.Hp > 0
+                    && (int) uiCharacterItem.CharacterData.ElementType == (int) bingoItem.BlockItem.BlockType)
+                {
+                    
+                }
+            }
+            
             GameObject go = Managers.Resource.Instantiate($"Particle/UI/UIParticle_001", transform);
             go.transform.position = bingoItem.transform.position;
             
@@ -388,17 +441,23 @@ public class UI_IngamePopup : UI_Popup
             foreach (ParticleSystem particleSystem in particleSystems)
             {
                 particleSystem.loop = true;
-                particleSystem.startColor = particleColor;
+                particleSystem.startColor = PuzzleColor(bingoItem.BlockItem.BlockType);;
 
                 if (refreshDelayTime < particleSystem.duration)
                     refreshDelayTime = particleSystem.duration;
             }
 
+            bool destroy = true;
             foreach (UI_CharacterItem uiCharacterItem in _characterItems)
             {
-                if ((int) uiCharacterItem.CharacterData.ElementType == (int) bingoItem.BlockItem.BlockType)
+                float delay = 1.0f;
+                
+                if (uiCharacterItem.CharacterData != null
+                    && uiCharacterItem.Hp > 0
+                    && (int) uiCharacterItem.CharacterData.ElementType == (int) bingoItem.BlockItem.BlockType)
                 {
-                    float delay = 1.0f;
+                    destroy = false;
+                    
                     DOTween.To(() => delay, value => delay = value, 1.0f, 1.0f)
                     .OnComplete(() =>
                     {
@@ -434,6 +493,20 @@ public class UI_IngamePopup : UI_Popup
                         });
                     });
                 }
+            }
+
+            if (destroy)
+            {
+                float delay = 1.0f;
+                DOTween.To(() => delay, value => delay = value, 1.0f, 1.0f)
+                .OnComplete(() =>
+                {
+                    if (go != null)
+                    {
+                        Destroy(go);
+                        go = null;
+                    }
+                });
             }
         }
 
@@ -511,6 +584,9 @@ public class UI_IngamePopup : UI_Popup
         // 턴 행동 가능 횟수 초기화
         _turnActionCount = 0;
         
+        // 몬스터 행동 초기화
+        _monsterAction = false;
+        
         // 블록 추가
         GameObject parent = Get<GameObject>((int) GameObjects.BlockItems);
         UI_BlockItem blockItem = Managers.UI.MakeSubItem<UI_BlockItem>(parent.transform);
@@ -549,7 +625,20 @@ public class UI_IngamePopup : UI_Popup
         Data.CharacterData monsterData = null;
         Managers.Data.CharacterDict.TryGetValue(100, out monsterData);
         if (monsterData != null)
+        {
             _monsterController.SetData(monsterData);
+
+            UI_BossHpBar uiBossHpBar = Utils.FindChild<UI_BossHpBar>(gameObject, recursive: true);
+            if (uiBossHpBar != null)
+            {
+                uiBossHpBar.SetInfo(monsterData);
+                _monsterController.SetHpBar(uiBossHpBar);
+            }
+            else
+            {
+                Debug.Log("uiBossHpBar null");
+            }
+        }
     }
     
     void OnDropItem(UI_TileItem item)

@@ -1,6 +1,8 @@
 using System;
 using Data;
 using DG.Tweening;
+using Spine;
+using Spine.Unity;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using static Define;
@@ -34,7 +36,7 @@ public class MonsterController : BaseController
         if (base.Init() == false)
             return false;
         
-        _hpBar = Utils.FindChild<UI_HpBar>(gameObject, "UI_HpBar", true);
+        // _hpBar = Utils.FindChild<UI_HpBar>(gameObject, "UI_HpBar", true);
 
         SekSkeletonAsset("Spine/Monster_100/monster_1_SkeletonData");
         PlayAnimation("idle");
@@ -150,6 +152,17 @@ public class MonsterController : BaseController
         Init();
 
         Hp = characterData.MaxHp;
+
+        Bone bone = _anim.Skeleton.FindSlot("FX_1").Bone;
+        Debug.Log(bone.WorldX + " " + bone.WorldY);
+    }
+
+    public void SetHpBar(UI_HpBar uiHpBar)
+    {
+        if (_hpBar != null)
+            _hpBar.gameObject.SetActive(false);
+
+        _hpBar = uiHpBar;
     }
 
     private void RefreshHp()

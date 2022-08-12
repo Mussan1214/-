@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Data;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -104,8 +105,79 @@ public class UI_CharacterItem : UI_Base
     {
         Get<Slider>((int) Sliders.HpBar).value = (float) Hp / CharacterData.MaxHp;
     }
-    
-    
+
+    public void OnDamage(CharacterData attacker)
+    {
+        float elementDamageRate = 1.0f;
+        if (CharacterData.ElementType != attacker.ElementType)
+        {
+            switch (CharacterData.ElementType)
+            {
+                case ElementType.None:
+                    break;
+                case ElementType.Fire:
+                    if (attacker.ElementType == ElementType.Water)
+                        elementDamageRate = 2.0f;
+                    else if (attacker.ElementType == ElementType.Earth)
+                        elementDamageRate = 0.5f;
+                    break;
+                
+                case ElementType.Water:
+                    if (attacker.ElementType == ElementType.Wind)
+                        elementDamageRate = 2.0f;
+                    else if (attacker.ElementType == ElementType.Fire)
+                        elementDamageRate = 0.5f;
+                    break;
+                
+                case ElementType.Earth:
+                    if (attacker.ElementType == ElementType.Fire)
+                        elementDamageRate = 2.0f;
+                    else if (attacker.ElementType == ElementType.Wind)
+                        elementDamageRate = 0.5f;
+                    break;
+                
+                case ElementType.Wind:
+                    if (attacker.ElementType == ElementType.Earth)
+                        elementDamageRate = 2.0f;
+                    else if (attacker.ElementType == ElementType.Water)
+                        elementDamageRate = 0.5f;
+                    break;
+            }
+        }
+        
+        int damage = (int) ((float) attacker.Atk * elementDamageRate);
+        Debug.Log($"{damage}");
+        Hp = Math.Max(Hp - damage, 0);
+
+        GameObject effectObject = Managers.Resource.Instantiate("Effect/AttackEffect", transform);
+
+        int degree = UnityEngine.Random.Range(0, 180);
+        float radian = degree * Mathf.PI / 180;
+        float distance = UnityEngine.Random.Range(0.0f, 10.0f);
+
+        Vector3 effectPosition = effectObject.transform.position;
+        effectPosition.x += distance * Mathf.Cos(radian);
+        effectPosition.y += distance * Mathf.Sin(radian);
+        effectObject.transform.position = effectPosition;
+
+        Animator animator = effectObject.GetComponent<Animator>();
+        float clipLength = animator.runtimeAnimatorController.animationClips[0].length;
+        Destroy(effectObject, clipLength);
+
+        GameObject damageObject = Managers.Resource.Instantiate("UI/UI_OnDamage", transform);
+        effectPosition.y += 50.0f;
+        damageObject.transform.position = effectPosition;
+        
+        UI_OnDamage uiOnDamage = damageObject.GetComponent<UI_OnDamage>();
+        uiOnDamage.SetDamage(damage, attacker.ElementType);
+        
+        if (Hp <= 0)
+        {
+            GetImage((int) Images.CharacterImage).DOColor(Color.gray, 1.0f);
+            GetImage((int) Images.ElementImage).DOColor(Color.gray, 1.0f);
+            GetImage((int) Images.FrameImage).DOColor(Color.gray, 1.0f);
+        }
+    }
 
     void OnPressed(PointerEventData eventData)
     {
