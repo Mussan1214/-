@@ -17,9 +17,20 @@ public class UI_IngamePopup : UI_Popup
         MonsterPanel,
     }
 
+    enum Buttons
+    {
+        GameSpeedButton
+    }
+    
+    enum Images
+    {
+        GameSpeedImage,
+    }
+    
     enum Texts
     {
         TurnCountText,
+        GameSpeedText,
     }
 
     enum CanvasGroups
@@ -55,10 +66,14 @@ public class UI_IngamePopup : UI_Popup
         
         BindObject(typeof(GameObjects));
         BindText(typeof(Texts));
+        BindImage(typeof(Images));
+        BindButton(typeof(Buttons));
         Bind<CanvasGroup>(typeof(CanvasGroups));
         
+        GetButton((int) Buttons.GameSpeedButton).gameObject.BindEvent(data => OnClickGameSpeed());
+        
         SetPuzzleState(PuzzleState.Init);
-
+        
         return true;
     }
     
@@ -92,6 +107,7 @@ public class UI_IngamePopup : UI_Popup
                 MakeMap();
                 MakeCharacter();
 
+                SetGameSpeed(1.0f);
                 SetPuzzleState(PuzzleState.Play);
                 break;
             
@@ -640,6 +656,14 @@ public class UI_IngamePopup : UI_Popup
             }
         }
     }
+
+    void SetGameSpeed(float timeScale)
+    {
+        Time.timeScale = timeScale;
+        
+        GetText((int) Texts.GameSpeedText).text = $"X{timeScale:F1}";
+        GetText((int) Texts.GameSpeedText).transform.DOPunchScale(Vector3.one, 0.3f, 1);
+    }
     
     void OnDropItem(UI_TileItem item)
     {
@@ -648,6 +672,17 @@ public class UI_IngamePopup : UI_Popup
             item.BlockItem.SetState(Define.BlockState.Impossible);
             CheckActionCount(item);
         }
+    }
+
+    void OnClickGameSpeed()
+    {
+        float timeScale = Time.timeScale;
+
+        timeScale = timeScale == 1.0f ? 1.5f
+            : timeScale == 1.5f ? 2.0f
+            : 1.0f;
+
+        SetGameSpeed(timeScale);
     }
 }
 
